@@ -261,6 +261,99 @@
             opacity: 1;
         }
 
+        /* Modal de Confirmação */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            border: 2px solid #553ec4;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(85, 62, 196, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            color: #e0e0e0;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-message {
+            color: #9ca3af;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .modal-btn-cancel {
+            background: #2a2a3e;
+            color: #e0e0e0;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #3a3a4e;
+            transform: translateY(-2px);
+        }
+
+        .modal-btn-confirm {
+            background: #553ec4;
+            color: white;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #6d4fd9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(85, 62, 196, 0.4);
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -296,9 +389,10 @@
     <!-- TABS -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('todos')">Todos</button>
-        <button class="tab-btn" onclick="switchTab('filmes')">🎬 Filmes</button>
-        <button class="tab-btn" onclick="switchTab('series')">📺 Séries</button>
-        <button class="tab-btn" onclick="switchTab('animes')">🎌 Animes</button>
+        <button class="tab-btn" onclick="switchTab('filmes')">Filmes</button>
+        <button class="tab-btn" onclick="switchTab('series')">Séries</button>
+        <button class="tab-btn" onclick="switchTab('animes')">Animes</button>
+        <button class="tab-btn" onclick="switchTab('animacoes')">Animações</button>
     </div>
 
     <!-- CONTEÚDO DAS ABAS -->
@@ -322,11 +416,28 @@
     <div id="animes" class="content">
         <div id="animes-grid" class="favorites-grid"></div>
     </div>
+
+    <!-- Aba ANIMAÇÕES -->
+    <div id="animacoes" class="content">
+        <div id="animacoes-grid" class="favorites-grid"></div>
+    </div>
 </div>
 
 <!-- TOAST NOTIFICAÇÃO -->
 <div id="toast" class="toast">
     <span id="toastMessage"></span>
+</div>
+
+<!-- MODAL DE CONFIRMAÇÃO -->
+<div id="modalOverlay" class="modal-overlay">
+    <div class="modal-content">
+        <h3 class="modal-title">Remover dos Favoritos?</h3>
+        <p class="modal-message">Tem certeza que deseja remover este conteúdo da sua lista de favoritos?</p>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancelar</button>
+            <button class="modal-btn modal-btn-confirm" onclick="confirmRemove()">Remover</button>
+        </div>
+    </div>
 </div>
 
 <!-- Firebase SDK Completo -->
@@ -352,25 +463,27 @@
     let allContent = {
         filmes: [],
         series: [],
-        animes: []
+        animes: [],
+        animacoes: []
     };
 
     let favorites = {
         filmes: [],
         series: [],
-        animes: []
+        animes: [],
+        animacoes: []
     };
 
     // Carrega conteúdo do Firebase
     function loadContentFromFirebase() {
         return new Promise((resolve) => {
             let loadedCount = 0;
-            const totalCategories = 3;
+            const totalCategories = 4;
 
             database.ref('content/filmes').once('value', (snapshot) => {
                 const data = snapshot.val();
                 allContent.filmes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
-                console.log('📽️ Filmes carregados:', allContent.filmes.length);
+                console.log('Filmes carregados:', allContent.filmes.length);
                 loadedCount++;
                 if (loadedCount === totalCategories) resolve();
             });
@@ -378,7 +491,7 @@
             database.ref('content/series').once('value', (snapshot) => {
                 const data = snapshot.val();
                 allContent.series = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
-                console.log('📺 Séries carregadas:', allContent.series.length);
+                console.log('Séries carregadas:', allContent.series.length);
                 loadedCount++;
                 if (loadedCount === totalCategories) resolve();
             });
@@ -386,7 +499,15 @@
             database.ref('content/animes').once('value', (snapshot) => {
                 const data = snapshot.val();
                 allContent.animes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
-                console.log('🎌 Animes carregados:', allContent.animes.length);
+                console.log('Animes carregados:', allContent.animes.length);
+                loadedCount++;
+                if (loadedCount === totalCategories) resolve();
+            });
+
+            database.ref('content/animacoes').once('value', (snapshot) => {
+                const data = snapshot.val();
+                allContent.animacoes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
+                console.log('Animações carregadas:', allContent.animacoes.length);
                 loadedCount++;
                 if (loadedCount === totalCategories) resolve();
             });
@@ -411,29 +532,32 @@
             
             if (savedFavorites) {
                 const favoriteIds = JSON.parse(savedFavorites);
-                console.log('💜 IDs dos favoritos:', favoriteIds);
+                console.log('IDs dos favoritos:', favoriteIds);
                 
                 // Busca os dados completos de cada favorito usando firebaseKey OU id
                 favoriteIds.forEach(favId => {
                     const filme = allContent.filmes.find(f => (f.firebaseKey || f.id) === favId);
                     const serie = allContent.series.find(s => (s.firebaseKey || s.id) === favId);
                     const anime = allContent.animes.find(a => (a.firebaseKey || a.id) === favId);
+                    const animacao = allContent.animacoes.find(a => (a.firebaseKey || a.id) === favId);
                     
                     if (filme) favorites.filmes.push(filme);
                     if (serie) favorites.series.push(serie);
                     if (anime) favorites.animes.push(anime);
+                    if (animacao) favorites.animacoes.push(animacao);
                 });
                 
-                console.log('✅ Favoritos encontrados:', {
+                console.log('Favoritos encontrados:', {
                     filmes: favorites.filmes.length,
                     series: favorites.series.length,
-                    animes: favorites.animes.length
+                    animes: favorites.animes.length,
+                    animacoes: favorites.animacoes.length
                 });
             }
             
             renderFavorites();
         } catch (error) {
-            console.error('❌ Erro ao carregar favoritos:', error);
+            console.error('Erro ao carregar favoritos:', error);
             alert('Erro ao carregar favoritos. Tente novamente.');
         }
     }
@@ -443,15 +567,17 @@
         const filmesGrid = document.getElementById('filmes-grid');
         const seriesGrid = document.getElementById('series-grid');
         const animesGrid = document.getElementById('animes-grid');
+        const animacoesGrid = document.getElementById('animacoes-grid');
 
         // Limpar grids
         todosGrid.innerHTML = '';
         filmesGrid.innerHTML = '';
         seriesGrid.innerHTML = '';
         animesGrid.innerHTML = '';
+        animacoesGrid.innerHTML = '';
 
         // Todos os favoritos
-        const allFavorites = [...favorites.filmes, ...favorites.series, ...favorites.animes];
+        const allFavorites = [...favorites.filmes, ...favorites.series, ...favorites.animes, ...favorites.animacoes];
         
         if (allFavorites.length === 0) {
             todosGrid.innerHTML = getEmptyState();
@@ -487,14 +613,23 @@
                 animesGrid.innerHTML += createCard(item);
             });
         }
+
+        // Animações
+        if (favorites.animacoes.length === 0) {
+            animacoesGrid.innerHTML = getEmptyState('animações');
+        } else {
+            favorites.animacoes.forEach(item => {
+                animacoesGrid.innerHTML += createCard(item);
+            });
+        }
     }
 
     function createCard(item) {
         return `
             <div class="favorite-card" onclick="window.location.href='inicio'">
                 <div class="card-image">
-                    <img src="${item.imageUrl}" alt="${item.title}" onerror="this.parentElement.innerHTML='<div class=card-placeholder>🎬</div>'">
-                    <button class="remove-btn" onclick="event.stopPropagation(); removeFavorite(${item.id})" title="Remover dos favoritos">×</button>
+                    <img src="${item.imageUrl}" alt="${item.title}" onerror="this.parentElement.innerHTML='<div class=card-placeholder>?</div>'">
+                    <button class="remove-btn" onclick="event.stopPropagation(); removeFavorite('${item.firebaseKey || item.id}')" title="Remover dos favoritos">×</button>
                 </div>
                 <div class="card-info">
                     <div class="card-title" title="${item.title}">${item.title}</div>
@@ -508,7 +643,7 @@
     }
 
     function getEmptyState(type = '') {
-        const message = type ? `Você ainda não favoritou nenhum ${type}` : 'Você ainda não tem favoritos';
+        const message = type ? `Você ainda não favoritou nenhuma ${type}` : 'Você ainda não tem favoritos';
         return `
             <div class="empty-state">
                 <svg fill="currentColor" viewBox="0 0 20 20">
@@ -521,28 +656,46 @@
     }
 
     function removeFavorite(id) {
-        if (confirm('Deseja remover este item dos favoritos?')) {
-            try {
-                const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
-                if (!loggedUser) return;
+        // Armazena o ID para usar na confirmação
+        window.pendingRemoveId = id;
+        
+        // Abre o modal
+        const modal = document.getElementById('modalOverlay');
+        modal.classList.add('show');
+    }
 
-                const savedFavorites = localStorage.getItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`);
-                if (savedFavorites) {
-                    let favoriteIds = JSON.parse(savedFavorites);
-                    favoriteIds = favoriteIds.filter(favId => favId !== id);
-                    localStorage.setItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`, JSON.stringify(favoriteIds));
-                    
-                    showToast('Removido dos favoritos!');
-                    
-                    // Recarrega a página
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
-                }
-            } catch (error) {
-                console.error('❌ Erro ao remover favorito:', error);
-                alert('Erro ao remover favorito');
+    function closeModal() {
+        const modal = document.getElementById('modalOverlay');
+        modal.classList.remove('show');
+        window.pendingRemoveId = null;
+    }
+
+    function confirmRemove() {
+        const id = window.pendingRemoveId;
+        if (!id) return;
+
+        try {
+            const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
+            if (!loggedUser) return;
+
+            const savedFavorites = localStorage.getItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`);
+            if (savedFavorites) {
+                let favoriteIds = JSON.parse(savedFavorites);
+                favoriteIds = favoriteIds.filter(favId => favId !== id);
+                localStorage.setItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`, JSON.stringify(favoriteIds));
+                
+                closeModal();
+                showToast('Removido dos favoritos!');
+                
+                // Recarrega a página
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             }
+        } catch (error) {
+            console.error('Erro ao remover favorito:', error);
+            closeModal();
+            alert('Erro ao remover favorito');
         }
     }
 
@@ -569,8 +722,16 @@
 
     // Carrega favoritos ao iniciar
     window.addEventListener('load', () => {
-        console.log('🚀 Página de favoritos carregada');
+        console.log('Página de favoritos carregada');
         loadFavorites();
+    });
+
+    // Fecha modal ao clicar fora dele
+    document.addEventListener('click', (e) => {
+        const modal = document.getElementById('modalOverlay');
+        if (e.target === modal) {
+            closeModal();
+        }
     });
 </script>
 

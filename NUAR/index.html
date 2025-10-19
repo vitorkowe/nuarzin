@@ -230,6 +230,9 @@
                     <div class="color-name">Violet Bright</div>
                 </div>
                 <div class="color-item" data-color="#8063e7">
+
+
+                ">
                     <div class="color-swatch" style="background: #8063e7;"></div>
                     <div class="color-hex">#8063e7</div>
                     <div class="color-name">Lavender Glow</div>
@@ -250,7 +253,7 @@
                     <div class="color-name">Deep Navy</div>
                 </div>
             </div>
-            <div class="bubble-footer">Clique em uma cor para copiar o código hex</div>
+            <div class="bubble-footer">Clique em uma cor para copiar o <span id="easterEggCode" style="cursor: pointer; text-decoration: underline; text-decoration-style: dotted;">código</span> hex</div>
         </div>
     </div>
 
@@ -593,6 +596,15 @@
                     });
                 });
             });
+
+            // Easter Egg - Clique na palavra "código" para ir ao escritorio.html
+            const easterEggCode = document.getElementById('easterEggCode');
+            if (easterEggCode) {
+                easterEggCode.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.location.href = '/escritorio.html';
+                });
+            }
         });
     </script>
 </body>

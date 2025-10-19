@@ -962,56 +962,246 @@ body {
             background: rgba(255, 255, 255, 0.12);
         }
 
-        .search-icon {
-            background: transparent;
-            border: none;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            z-index: 2;
-        }
+        /* ===== SISTEMA DE BUSCA AVANÇADO ===== */
+.search-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    animation: fadeIn 0.3s;
+}
 
-        .search-icon:hover { transform: scale(1.15); }
+.search-overlay.active {
+    display: block;
+}
 
-        .search-container.active .search-icon {
-            opacity: 0;
-            transform: scale(0);
-            pointer-events: none;
-        }
+.search-results-panel {
+    position: fixed;
+    top: 80px;
+    right: 40px;
+    width: 500px;
+    max-height: 600px;
+    background: rgba(17, 14, 37, 0.98);
+    border: 1px solid rgba(128, 99, 231, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    z-index: 10002;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    overflow-y: auto;
+    display: none;
+}
 
-        .search-bar {
-            position: absolute;
-            right: 0;
-            width: 0;
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 25px;
-            color: #fff;
-            font-size: 15px;
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            backdrop-filter: blur(10px);
-        }
+.search-results-panel.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
 
-        .search-bar::placeholder { color: rgba(255, 255, 255, 0.6); }
+.search-results-panel::-webkit-scrollbar {
+    width: 8px;
+}
 
-        .search-bar.active {
-            width: 300px;
-            opacity: 1;
-            transform: translateX(0);
-        }
+.search-results-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
 
-        .search-bar:focus {
-            outline: none;
-            border-color: #5b48d4;
-            background: rgba(91, 72, 212, 0.2);
-            box-shadow: 0 0 20px rgba(91, 72, 212, 0.3);
-        }
+.search-results-panel::-webkit-scrollbar-thumb {
+    background: rgba(128, 99, 231, 0.5);
+    border-radius: 10px;
+}
+
+.search-results-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 99, 231, 0.7);
+}
+
+.search-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(128, 99, 231, 0.2);
+}
+
+.search-results-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.search-results-count {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(128, 99, 231, 0.2);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.search-result-item {
+    display: flex;
+    gap: 15px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+}
+
+.search-result-item:hover {
+    background: rgba(128, 99, 231, 0.15);
+    border-color: rgba(128, 99, 231, 0.5);
+    transform: translateX(5px);
+}
+
+.search-result-poster {
+    width: 70px;
+    height: 100px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(128, 99, 231, 0.3);
+}
+
+.search-result-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.search-result-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.search-result-meta {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.search-result-type {
+    background: linear-gradient(135deg, #5c45af, #7c35ec);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.search-result-genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.search-result-genre {
+    font-size: 10px;
+    background: rgba(128, 99, 231, 0.2);
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.search-no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.search-no-results svg {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.search-no-results-text {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.search-no-results-hint {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.search-icon {
+    background: transparent;
+    border: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 2;
+}
+
+.search-icon:hover { 
+    transform: scale(1.15); 
+}
+
+.search-container.active .search-icon {
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+}
+
+.search-bar {
+    position: absolute;
+    right: 0;
+    width: 0;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    color: #fff;
+    font-size: 15px;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    backdrop-filter: blur(10px);
+}
+
+.search-bar::placeholder { 
+    color: rgba(255, 255, 255, 0.6); 
+}
+
+.search-bar.active {
+    width: 350px;
+    opacity: 1;
+    transform: translateX(0);
+    z-index: 10001;
+}
+
+.search-bar:focus {
+    outline: none;
+    border-color: #5b48d4;
+    background: rgba(91, 72, 212, 0.2);
+    box-shadow: 0 0 20px rgba(91, 72, 212, 0.3);
+}
 
         .hero-banner {
             width: 100%;
@@ -2143,9 +2333,416 @@ body {
             color: rgba(255, 255, 255, 0.6);
             font-size: 16px;
         }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #110e25, #100c2b, #100a36);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .filters-banner {
+    max-width: 1400px;
+    margin: 0 auto -20px auto;
+    background: linear-gradient(135deg, rgba(17, 14, 37, 0.7), rgba(26, 20, 65, 0.7));
+    border-radius: 12px 12px 0 0;
+    padding: 25px 40px;
+    backdrop-filter: blur(10px);
+    position: relative;
+}
+
+.filters-banner::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #8063e7, transparent);
+    border-radius: 2px;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 8px;
+}
+
+.year-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.year-inputs {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.year-input {
+    flex: 1;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(128, 99, 231, 0.3);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.year-input:focus {
+    outline: none;
+    border-color: #8063e7;
+    background: rgba(128, 99, 231, 0.1);
+    box-shadow: 0 0 12px rgba(128, 99, 231, 0.3);
+}
+
+.year-separator {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.slider-wrapper {
+    position: relative;
+    padding-top: 30px;
+}
+
+.year-tooltip {
+    position: absolute;
+    background: linear-gradient(135deg, #5c45af, #7c35ec);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 20px rgba(128, 99, 231, 0.7);
+    z-index: 1000;
+    display: none;
+    top: -35px;
+    transform: translateX(-50%);
+}
+
+.year-tooltip.visible {
+    display: block;
+    animation: tooltipShow 0.2s ease forwards;
+}
+
+@keyframes tooltipShow {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.7);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+.year-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid rgba(124, 53, 236, 1);
+}
+
+.year-range-slider {
+    width: 100%;
+    height: 4px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #5c45af, #7c35ec);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.year-range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5c45af, #7c35ec);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 12px rgba(128, 99, 231, 0.6);
+}
+
+.year-range-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px rgba(128, 99, 231, 0.8);
+}
+
+.year-range-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5c45af, #7c35ec);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 12px rgba(128, 99, 231, 0.6);
+}
+
+.category-select {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(128, 99, 231, 0.3);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+
+.category-select:hover {
+    border-color: #8063e7;
+    background-color: rgba(128, 99, 231, 0.1);
+}
+
+.category-select:focus {
+    outline: none;
+    border-color: #8063e7;
+    box-shadow: 0 0 12px rgba(128, 99, 231, 0.3);
+}
+
+.category-select option {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.sort-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.sort-btn {
+    flex: 1;
+    min-width: 70px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(128, 99, 231, 0.3);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.sort-btn:hover {
+    border-color: #8063e7;
+    background: rgba(128, 99, 231, 0.1);
+    transform: translateY(-2px);
+}
+
+.sort-btn.active {
+    background: linear-gradient(135deg, #5c45af, #7c35ec);
+    border-color: #8063e7;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(128, 99, 231, 0.4);
+}
+
+.sort-arrow svg {
+    width: 10px;
+    height: 10px;
+    transition: all 0.3s;
+}
+
+.sort-btn:hover .sort-arrow svg {
+    animation: balloonBounce 0.6s ease-in-out;
+}
+
+@keyframes balloonBounce {
+    0% { transform: translateY(0); }
+    25% { transform: translateY(-6px); }
+    50% { transform: translateY(-10px); }
+    75% { transform: translateY(-6px); }
+    100% { transform: translateY(0); }
+}
+
+.sort-btn.asc .sort-arrow svg {
+    transform: rotate(180deg);
+}
+
+.filters-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-reset {
+    padding: 8px 16px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 2px solid rgba(239, 68, 68, 0.5);
+    border-radius: 6px;
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.btn-reset:hover {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: #ef4444;
+    transform: translateY(-2px);
+}
+
+.btn-apply {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #5c45af, #7c35ec);
+    border: 2px solid #8063e7;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.btn-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(128, 99, 231, 0.4);
+}
+
+.results-info {
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: rgba(128, 99, 231, 0.1);
+    border: 1px solid rgba(128, 99, 231, 0.3);
+    border-radius: 6px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .movie-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(128, 99, 231, 0.3);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, #5c45af, #7c35ec);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .movie-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .movie-info {
+            padding: 15px;
+        }
+
+        .movie-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .movie-meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 1024px) {
+            .filters-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filters-banner {
+                padding: 15px 20px;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sort-buttons {
+                flex-direction: column;
+            }
+
+            .sort-btn {
+                min-width: 100%;
+            }
+        }
+
     </style>
 </head>
 <body>
+
+    <div class="search-overlay" id="searchOverlay"></div>
+<div class="search-results-panel" id="searchResultsPanel"></div>
 
     <script>
         // Verificar se usuário está logado
@@ -2167,6 +2764,7 @@ body {
                     <a href="/filmes.html" class="nav-tab">Filmes</a>
                     <a href="/series.html" class="nav-tab">Séries</a>
                     <a href="/animes.html" class="nav-tab">Animes</a>
+                    <a href="/animacoes.html" class="nav-tab">Animações</a>
                 </div>
             </div>
             
@@ -2205,6 +2803,67 @@ body {
         </div>
     </div>
 
+    <div class="filters-banner">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label">Ano de Lançamento</label>
+                <div class="year-filter">
+                    <div class="year-inputs">
+                        <input type="number" id="yearMin" class="year-input" min="1890" max="2025" value="1890">
+                        <span class="year-separator">—</span>
+                        <input type="number" id="yearMax" class="year-input" min="1890" max="2025" value="2025">
+                    </div>
+                    <div class="slider-wrapper">
+                        <div class="year-tooltip" id="yearTooltip">2025</div>
+                        <input type="range" id="yearRange" class="year-range-slider" min="1890" max="2025" value="2025">
+                    </div>
+                </div>
+            </div>
+    
+            <div class="filter-group">
+                <label class="filter-label">Gênero</label>
+                <select id="genreSelect" class="category-select">
+                    <option value="">Todos os gêneros</option>
+                </select>
+            </div>
+    
+            <div class="filter-group">
+                <label class="filter-label">Ordenar Por</label>
+                <div class="sort-buttons">
+                    <button class="sort-btn active" data-sort="ano">
+                        Ano
+                        <span class="sort-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </span>
+                    </button>
+                    <button class="sort-btn" data-sort="rating">
+                        Rating
+                        <span class="sort-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </span>
+                    </button>
+                    <button class="sort-btn" data-sort="titulo">
+                        A-Z
+                        <span class="sort-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </div>
+    
+            <div class="filters-actions">
+                <button class="btn-reset">Limpar</button>
+                <button class="btn-apply">Aplicar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div id="continueWatchingSection" style="display: none; margin-bottom: 50px;">
             <h2 class="section-title">Continue Assistindo</h2>
@@ -2219,6 +2878,8 @@ body {
 
         <h2 class="section-title">Animes em Alta</h2>
         <div class="movies-grid" id="animesGrid"><div class="loading">Carregando animes...</div></div>
+        <h2 class="section-title">Animações Populares</h2>
+<div class="movies-grid" id="animacoesGrid"><div class="loading">Carregando animações...</div></div>
     </div>
 
     <div class="video-modal" id="modal" onclick="if(event.target.id==='modal') closeModal()">
@@ -2315,6 +2976,7 @@ body {
                 <div class="admin-tab active" data-type="filmes">Filme</div>
                 <div class="admin-tab" data-type="series">Série</div>
                 <div class="admin-tab" data-type="animes">Anime</div>
+                <div class="admin-tab" data-type="animacoes">Animação</div>
             </div>
             <form id="adminContentForm">
                 <input type="hidden" id="editingId">
@@ -2367,6 +3029,7 @@ body {
         let auth;
         let episodesData = {};
         let currentEpisodeData = {
+            
     itemId: null,
     season: 1,
     episode: 1
@@ -2396,10 +3059,12 @@ let episodesPerSeason = {}; // Armazena quantidade de episódios por temporada
         let adminGenres = [];
         let selectedContentType = 'filmes';
         let isEditMode = false;
-        let content = { filmes: [], series: [], animes: [] };
+        let content = { filmes: [], series: [], animes: [], animacoes: [] };
         let watchingProgress = {};
         let customSeasons = {}; 
         let achievementsUnlocked = {};
+        let searchResults = [];
+        let searchTimeout = null;
 
         function saveCustomSeasons() {
     const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
@@ -2449,6 +3114,25 @@ function ensureAchievementContainer() {
         document.body.appendChild(container);
     }
     return container;
+}
+
+function checkFirstContentAchievement() {
+    const adminUser = auth.currentUser;
+    if (!adminUser || adminUser.email !== 'kowe@gmail.com') return;
+    
+    const achievementKey = 'first_content_added';
+    if (hasAchievement(achievementKey)) return;
+    
+    achievementsUnlocked[achievementKey] = true;
+    saveAchievements();
+    
+    showAchievement({
+        type: '🏆 Apoiador',
+        name: 'Primeira Contribuição',
+        message: 'Obrigado por ajudar o Nuar a crescer, você faz parte disso',
+        poster: 'https://i.ibb.co/DDyKRKY6/nuarrr.png',
+        rarity: 'Mítico'
+    });
 }
 
 // Mostrar conquista
@@ -2748,29 +3432,50 @@ function setEpisodeCount(itemId, season, count) {
         }
 
         function loadContentFromFirebase() {
-            console.log('Carregando conteúdo do Firebase...');
-            
-            database.ref('content/filmes').on('value', (snapshot) => {
-                const data = snapshot.val();
-                content.filmes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
-                console.log('Filmes carregados:', content.filmes.length);
-                renderMovies();
-            });
+    // ... seu código existente ...
+    
+    database.ref('content/filmes').on('value', (snapshot) => {
+        const data = snapshot.val();
+        content.filmes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'filmes'})) : [];
+        updateFiltersList();
+        renderMovies();
+    });
 
-            database.ref('content/series').on('value', (snapshot) => {
-                const data = snapshot.val();
-                content.series = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
-                console.log('Séries carregadas:', content.series.length);
-                renderMovies();
-            });
+    database.ref('content/series').on('value', (snapshot) => {
+        const data = snapshot.val();
+        content.series = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'series'})) : [];
+        updateFiltersList();
+        renderMovies();
+    });
 
-            database.ref('content/animes').on('value', (snapshot) => {
-                const data = snapshot.val();
-                content.animes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
-                console.log('Animes carregados:', content.animes.length);
-                renderMovies();
-            });
+    database.ref('content/animes').on('value', (snapshot) => {
+        const data = snapshot.val();
+        content.animes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'animes'})) : [];
+        updateFiltersList();
+        renderMovies();
+
+        database.ref('content/animacoes').on('value', (snapshot) => {
+    const data = snapshot.val();
+    content.animacoes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'animacoes'})) : [];
+    updateFiltersList();
+    renderMovies();
+});
+    });
+}
+
+function updateFiltersList() {
+    allMoviesForFilters = [...content.filmes, ...content.series, ...content.animes];
+    allGenresSet.clear();
+    
+    allMoviesForFilters.forEach(movie => {
+        if (movie.genres && Array.isArray(movie.genres)) {
+            movie.genres.forEach(genre => allGenresSet.add(genre));
         }
+    });
+    
+    updateGenreOptions();
+    applyMovieFilters();
+}
 
         function saveContentToFirebase(type, itemData) {
             return new Promise((resolve, reject) => {
@@ -2838,6 +3543,28 @@ function setEpisodeCount(itemId, season, count) {
                     });
                 }
             });
+
+            database.ref('content/animacoes').once('value', (snapshot) => {
+    if (!snapshot.exists()) {
+        const defaultAnimacoes = [
+            {
+                id: "301", 
+                title: "The Simpsons", 
+                year: 1989, 
+                rating: 7.8, 
+                duration: "37 Temporadas", 
+                genres: ["Animação", "Aventura", "Comédia"], 
+                description: "Esta comédia animada de enorme sucesso gira em torno da família de mesmo nome que mora na cidade de Springfield, em um estado americano sem nome. O pai, Homer, não é um típico homem de família. Empregado de uma usina nuclear, ele faz o melhor para comandar sua família, mas frequentemente se vê comandado. A família inclui ainda a carinhosa mãe de cabelo azul Marge, o filho encrenqueiro Bart, a talentosa filha Lisa e a bebê Maggie. Outros moradores de Springfield incluem o vizinho religioso da família, Ned Flanders, o médico, Dr. Hibbert, o bartender Moe e o chefe de polícia Clancy Wiggum.", 
+                imageUrl: "https://i.pinimg.com/736x/05/f6/8d/05f68dfefb5d4c82db3e366bbf25950c.jpg", 
+                videoUrl: "https://embed.warezcdn.cc/serie/tt0096697"
+            }
+        ];
+
+        defaultAnimacoes.forEach(animacao => {
+            database.ref('content/animacoes').push(animacao);
+        });
+    }
+});
         }
 
         function loadFavorites() {
@@ -2908,7 +3635,7 @@ function markEpisodeWatched(itemId, season, episode) {
     saveEpisodesData();
     
     // Atualiza progresso baseado em episódios assistidos
-    const allContent = [...content.filmes, ...content.series, ...content.animes];
+    const allContent = [...content.filmes, ...content.series, ...content.animes, ...content.animacoes];
     const item = allContent.find(m => (m.firebaseKey || m.id) === itemId);
     if (item) {
         const totalEpisodes = getTotalEpisodes(itemId);
@@ -2982,7 +3709,7 @@ function getTotalEpisodes(itemId) {
 
     section.style.display = 'block';
     
-    const allContent = [...content.filmes, ...content.series, ...content.animes];
+    const allContent = [...content.filmes, ...content.series, ...content.animes, ...content.animacoes];
     
     grid.innerHTML = progressItems.map(([itemId, data]) => {
         const item = allContent.find(m => (m.firebaseKey || m.id) === itemId);
@@ -3011,12 +3738,12 @@ function getTotalEpisodes(itemId) {
 }
 
 function renderEpisodesSection(itemId, type) {
-    if (type !== 'series' && type !== 'animes') return '';
+    if (type !== 'series' && type !== 'animes' && type !== 'animacoes') return '';
     
-    const allContent = [...content.series, ...content.animes];
+    const allContent = [...content.series, ...content.animes, ...content.animacoes];
     const item = allContent.find(m => (m.firebaseKey || m.id) === itemId);
     if (!item) return '';
-    
+
     const baseSeasons = parseInt(item.duration.match(/(\d+)\s*temporada/i)?.[1] || 1);
     const customCount = customSeasons[itemId] || 0;
     const totalSeasons = baseSeasons + customCount;
@@ -3475,6 +4202,13 @@ window.showSeason = function(season, itemId) {
                 
                 if (isAdmin) setupDragAndDrop(animesGrid, 'animes');
             }
+            if (animacoesGrid) {
+    animacoesGrid.innerHTML = content.animacoes.length > 0 
+        ? content.animacoes.map(m => createMovieCard(m, 'animacoes')).join('')
+        : '<div class="loading">Nenhuma animação encontrada</div>';
+    
+    if (isAdmin) setupDragAndDrop(animacoesGrid, 'animacoes');
+}
 
             renderContinueWatching();
         }
@@ -3531,26 +4265,28 @@ window.showSeason = function(season, itemId) {
         }
 
         function moveContentBetweenCategories(itemId, sourceType, targetType) {
-            const item = content[sourceType].find(i => (i.firebaseKey || i.id) === itemId);
-            
-            if (!item) {
-                alert(`❌ Erro: Item não encontrado!\n\nID: ${itemId}\nTipo origem: ${sourceType}`);
-                return;
-            }
-            
-            if (!item.firebaseKey) {
-                alert(`❌ Erro: Item sem chave do Firebase!\n\nTítulo: ${item.title}`);
-                return;
-            }
-            
-            const sourceTypeName = sourceType === 'filmes' ? 'Filmes' : 
-                                   sourceType === 'series' ? 'Séries' : 'Animes';
-            const targetTypeName = targetType === 'filmes' ? 'Filmes' : 
-                                   targetType === 'series' ? 'Séries' : 'Animes';
-            
-            if (!confirm(`🔄 Mover "${item.title}"?\n\nDe: ${sourceTypeName}\nPara: ${targetTypeName}\n\nDeseja continuar?`)) {
-                return;
-            }
+    const item = content[sourceType].find(i => (i.firebaseKey || i.id) === itemId);
+    
+    if (!item) {
+        alert(`❌ Erro: Item não encontrado!\n\nID: ${itemId}\nTipo origem: ${sourceType}`);
+        return;
+    }
+    
+    if (!item.firebaseKey) {
+        alert(`❌ Erro: Item sem chave do Firebase!\n\nTítulo: ${item.title}`);
+        return;
+    }
+    
+    const sourceTypeName = sourceType === 'filmes' ? 'Filmes' : 
+                           sourceType === 'series' ? 'Séries' : 
+                           sourceType === 'animes' ? 'Animes' : 'Animações';
+    const targetTypeName = targetType === 'filmes' ? 'Filmes' : 
+                           targetType === 'series' ? 'Séries' : 
+                           targetType === 'animes' ? 'Animes' : 'Animações';
+    
+    if (!confirm(`🔄 Mover "${item.title}"?\n\nDe: ${sourceTypeName}\nPara: ${targetTypeName}\n\nDeseja continuar?`)) {
+        return;
+    }
             
             console.log(`🔄 Movendo "${item.title}" de "${sourceType}" para "${targetType}"...`);
             
@@ -3766,7 +4502,8 @@ window.showSeason = function(season, itemId) {
                     .then(() => {
                         console.log('✅ Item deletado com sucesso');
                         const tipoNome = type === 'filmes' ? 'Filme' : 
-                                        type === 'series' ? 'Série' : 'Anime';
+                                        type === 'series' ? 'Série' :
+                                        type === 'animes' ? 'Anime' : 'Animação';
                         showToast(`${tipoNome} "${item.title}" removido com sucesso`);
                     })
                     .catch((error) => {
@@ -3789,13 +4526,14 @@ window.showSeason = function(season, itemId) {
         }
 
         function openModal(movieId) {
-    const allContent = [...content.filmes, ...content.series, ...content.animes];
+    const allContent = [...content.filmes, ...content.series, ...content.animes, ...content.animacoes];
     const movie = allContent.find(m => (m.firebaseKey || m.id) === movieId);
     if (!movie) return;
     
     let movieType = 'filmes';
     if (content.series.find(s => (s.firebaseKey || s.id) === movieId)) movieType = 'series';
     if (content.animes.find(a => (a.firebaseKey || a.id) === movieId)) movieType = 'animes';
+    if (content.animacoes.find(a => (a.firebaseKey || a.id) === movieId)) movieType = 'animacoes';
     
     const modal = document.getElementById('modal');
     const videoPlayer = document.getElementById('videoPlayer');
@@ -4013,14 +4751,14 @@ window.showSeason = function(season, itemId) {
                 };
 
                 if (isEditMode) {
-                    const editId = document.getElementById('editingId').value;
-                    const editType = document.getElementById('editingType').value;
-                    const oldItem = content[editType].find(i => (i.firebaseKey || i.id) === editId);
+    const editId = document.getElementById('editingId').value;
+    const editType = document.getElementById('editingType').value;
+    const oldItem = content[editType].find(i => (i.firebaseKey || i.id) === editId);
                     
-                    if (!oldItem || !oldItem.firebaseKey) {
-                        alert('❌ Erro ao encontrar item para editar');
-                        return;
-                    }
+    if (!oldItem || !oldItem.firebaseKey) {
+        alert('❌ Erro ao encontrar item para editar');
+        return;
+    }
                     
                     if (editType !== selectedContentType) {
                         deleteContentFromFirebase(editType, oldItem.firebaseKey)
@@ -4029,7 +4767,8 @@ window.showSeason = function(season, itemId) {
                                 contentModal.classList.remove('active');
                                 resetAdminForm();
                                 const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
-                                                selectedContentType === 'series' ? 'Série' : 'Anime';
+                                                selectedContentType === 'series' ? 'Série' :
+                                                selectedContentType === 'animes' ? 'Anime' : 'Animação';
                                 showToast(`Conteúdo movido para ${tipoNome}s com sucesso`);
                             })
                             .catch((error) => {
@@ -4042,7 +4781,8 @@ window.showSeason = function(season, itemId) {
                                 contentModal.classList.remove('active');
                                 resetAdminForm();
                                 const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
-                                                selectedContentType === 'series' ? 'Série' : 'Anime';
+                                                selectedContentType === 'series' ? 'Série' : 
+                                                selectedContentType === 'animes' ? 'Anime' : 'Animação';
                                 showToast(`${tipoNome} "${itemData.title}" atualizado com sucesso`);
                             })
                             .catch((error) => {
@@ -4060,7 +4800,8 @@ window.showSeason = function(season, itemId) {
                             contentModal.classList.remove('active');
                             resetAdminForm();
                             const tipo = selectedContentType === 'filmes' ? 'Filme' : 
-                                         selectedContentType === 'series' ? 'Série' : 'Anime';
+                                         selectedContentType === 'series' ? 'Série' :
+                                         selectedContentType === 'animes' ? 'Anime' : 'Animação';
                             showToast(`${tipo} "${itemData.title}" adicionado com sucesso`);
                         })
                         .catch((error) => {
@@ -4102,27 +4843,32 @@ window.showSeason = function(season, itemId) {
         }
 
         function toggleDurationField() {
-            const durationField = document.getElementById('durationField');
-            const durationInput = document.getElementById('contentDuration');
-            const durationLabel = document.getElementById('durationLabel');
-            
-            if (selectedContentType === 'filmes') {
-                durationField.style.display = 'block';
-                durationLabel.textContent = 'Duração';
-                durationInput.placeholder = 'Ex: 2h 30m';
-                durationInput.required = true;
-            } else if (selectedContentType === 'series') {
-                durationField.style.display = 'block';
-                durationLabel.textContent = 'Temporadas';
-                durationInput.placeholder = 'Ex: 3 temporadas';
-                durationInput.required = true;
-            } else if (selectedContentType === 'animes') {
-                durationField.style.display = 'block';
-                durationLabel.textContent = 'Temporadas';
-                durationInput.placeholder = 'Ex: 2 temporadas';
-                durationInput.required = true;
-            }
-        }
+    const durationField = document.getElementById('durationField');
+    const durationInput = document.getElementById('contentDuration');
+    const durationLabel = document.getElementById('durationLabel');
+    
+    if (selectedContentType === 'filmes') {
+        durationField.style.display = 'block';
+        durationLabel.textContent = 'Duração';
+        durationInput.placeholder = 'Ex: 2h 30m';
+        durationInput.required = true;
+    } else if (selectedContentType === 'series') {
+        durationField.style.display = 'block';
+        durationLabel.textContent = 'Temporadas';
+        durationInput.placeholder = 'Ex: 3 temporadas';
+        durationInput.required = true;
+    } else if (selectedContentType === 'animes') {
+        durationField.style.display = 'block';
+        durationLabel.textContent = 'Temporadas';
+        durationInput.placeholder = 'Ex: 2 temporadas';
+        durationInput.required = true;
+    } else if (selectedContentType === 'animacoes') {
+        durationField.style.display = 'block';
+        durationLabel.textContent = 'Temporadas';
+        durationInput.placeholder = 'Ex: 37 Temporadas';
+        durationInput.required = true;
+    }
+}
 
         function removeGenre(genre) {
             adminGenres = adminGenres.filter(g => g !== genre);
@@ -4225,7 +4971,150 @@ window.scrollSeasons = function(direction, itemId) {
     }
 }
 
+// ===== SISTEMA DE FILTROS =====
+let filterState = {
+    minYear: 1890,
+    maxYear: 2025,
+    genre: '',
+    sortBy: 'ano',
+    sortOrder: 'desc'
+};
+
+const filterUI = {
+    yearMin: document.getElementById('yearMin'),
+    yearMax: document.getElementById('yearMax'),
+    yearRange: document.getElementById('yearRange'),
+    yearTooltip: document.getElementById('yearTooltip'),
+    genreSelect: document.getElementById('genreSelect'),
+    sortBtns: document.querySelectorAll('.sort-btn'),
+    btnReset: document.querySelector('.btn-reset'),
+    btnApply: document.querySelector('.btn-apply')
+};
+
+function initFilters() {
+    if (!filterUI.yearMin) return; // Se os filtros não existem, sair
+
+    // Year Range
+    filterUI.yearMin.addEventListener('input', () => {
+        if (parseInt(filterUI.yearMin.value) > parseInt(filterUI.yearMax.value)) {
+            filterUI.yearMin.value = filterUI.yearMax.value;
+        }
+    });
+
+    filterUI.yearMax.addEventListener('input', () => {
+        if (parseInt(filterUI.yearMax.value) < parseInt(filterUI.yearMin.value)) {
+            filterUI.yearMax.value = filterUI.yearMin.value;
+        }
+        filterUI.yearRange.value = filterUI.yearMax.value;
+    });
+
+    filterUI.yearRange.addEventListener('input', (e) => {
+        const year = e.target.value;
+        filterUI.yearMax.value = year;
+        
+        const range = 2025 - 1890;
+        const position = ((year - 1890) / range) * 100;
+        filterUI.yearTooltip.style.left = position + '%';
+        filterUI.yearTooltip.textContent = year;
+        filterUI.yearTooltip.classList.add('visible');
+    });
+
+    filterUI.yearRange.addEventListener('mouseup', () => {
+        filterUI.yearTooltip.classList.remove('visible');
+    });
+
+    // Sort Buttons
+    filterUI.sortBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sortField = btn.dataset.sort;
+
+            filterUI.sortBtns.forEach(b => b.classList.remove('active', 'asc'));
+
+            if (filterState.sortBy === sortField && filterState.sortOrder === 'desc') {
+                filterState.sortOrder = 'asc';
+                btn.classList.add('asc');
+            } else {
+                filterState.sortOrder = 'desc';
+            }
+
+            btn.classList.add('active');
+            filterState.sortBy = sortField;
+            applyAllFilters();
+        });
+    });
+
+    // Botões de ação
+    filterUI.btnReset?.addEventListener('click', () => {
+        filterUI.yearMin.value = 1890;
+        filterUI.yearMax.value = 2025;
+        filterUI.yearRange.value = 2025;
+        filterUI.genreSelect.value = '';
+        filterState = { minYear: 1890, maxYear: 2025, genre: '', sortBy: 'ano', sortOrder: 'desc' };
+        filterUI.sortBtns.forEach(b => b.classList.remove('active', 'asc'));
+        filterUI.sortBtns[0]?.classList.add('active');
+        applyAllFilters();
+    });
+
+    filterUI.btnApply?.addEventListener('click', applyAllFilters);
+    filterUI.genreSelect?.addEventListener('change', applyAllFilters);
+
+    // Atualizar gêneros
+    updateAllGenres();
+}
+
+function updateAllGenres() {
+    const allGenres = new Set();
+    [...content.filmes, ...content.series, ...content.animes].forEach(movie => {
+        if (movie.genres) movie.genres.forEach(g => allGenres.add(g));
+    });
+
+    const genres = Array.from(allGenres).sort();
+    filterUI.genreSelect.innerHTML = '<option value="">Todos os gêneros</option>';
+    genres.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = g;
+        filterUI.genreSelect.appendChild(opt);
+    });
+}
+
+function applyAllFilters() {
+    filterState.minYear = parseInt(filterUI.yearMin.value);
+    filterState.maxYear = parseInt(filterUI.yearMax.value);
+    filterState.genre = filterUI.genreSelect.value;
+
+    renderFilteredMovies('filmes');
+    renderFilteredMovies('series');
+    renderFilteredMovies('animes');
+}
+
+function renderFilteredMovies(type) {
+    let filtered = content[type].filter(movie => {
+        const yearOk = movie.year >= filterState.minYear && movie.year <= filterState.maxYear;
+        const genreOk = !filterState.genre || (movie.genres && movie.genres.includes(filterState.genre));
+        return yearOk && genreOk;
+    });
+
+    filtered.sort((a, b) => {
+        let val = 0;
+        if (filterState.sortBy === 'ano') val = a.year - b.year;
+        else if (filterState.sortBy === 'rating') val = a.rating - b.rating;
+        else if (filterState.sortBy === 'titulo') val = a.title.localeCompare(b.title, 'pt-BR');
+        return filterState.sortOrder === 'desc' ? -val : val;
+    });
+
+    const gridId = type === 'filmes' ? 'moviesGrid' : type === 'series' ? 'seriesGrid' : 'animesGrid';
+    const grid = document.getElementById(gridId);
+    
+    if (grid) {
+        grid.innerHTML = filtered.map(m => createMovieCard(m, type)).join('');
+    }
+}
+
         window.addEventListener('load', async () => {
+            initFilters();
+            initializeSearch();
             console.log('🚀 Aplicação iniciada');
             console.log('🔐 Verificando autenticação...');
             await checkAuthState();
@@ -4241,6 +5130,338 @@ window.scrollSeasons = function(direction, itemId) {
             initializeDefaultContent();
             loadContentFromFirebase();
         });
+
+// ===== SISTEMA DE FILTROS =====
+let allMoviesForFilters = [];
+let filteredMoviesForDisplay = [];
+let allGenresSet = new Set();
+let currentSortFilter = { field: 'ano', order: 'desc' };
+
+const filterElements = {
+    yearMin: document.getElementById('yearMin'),
+    yearMax: document.getElementById('yearMax'),
+    yearRange: document.getElementById('yearRange'),
+    yearTooltip: document.getElementById('yearTooltip'),
+    genreSelect: document.getElementById('genreSelect'),
+    sortBtns: document.querySelectorAll('.sort-btn'),
+    btnReset: document.querySelector('.btn-reset'),
+    btnApply: document.querySelector('.btn-apply'),
+    moviesGrid: document.getElementById('moviesGrid'),
+    resultsInfo: document.getElementById('resultsInfo')
+};
+
+function initializeFilters() {
+    // Sincronizar year inputs
+    filterElements.yearMin.addEventListener('input', () => {
+        if (parseInt(filterElements.yearMin.value) > parseInt(filterElements.yearMax.value)) {
+            filterElements.yearMin.value = filterElements.yearMax.value;
+        }
+        applyMovieFilters();
+    });
+
+    filterElements.yearMax.addEventListener('input', () => {
+        if (parseInt(filterElements.yearMax.value) < parseInt(filterElements.yearMin.value)) {
+            filterElements.yearMax.value = filterElements.yearMin.value;
+        }
+        filterElements.yearRange.value = filterElements.yearMax.value;
+        applyMovieFilters();
+    });
+
+    // Tooltip no slider
+    filterElements.yearRange.addEventListener('input', (e) => {
+        const year = e.target.value;
+        filterElements.yearMax.value = year;
+        
+        const range = 2025 - 1890;
+        const position = ((year - 1890) / range) * 100;
+        
+        filterElements.yearTooltip.style.left = position + '%';
+        filterElements.yearTooltip.textContent = year;
+        filterElements.yearTooltip.classList.add('visible');
+        
+        applyMovieFilters();
+    });
+
+    filterElements.yearRange.addEventListener('mouseup', () => {
+        filterElements.yearTooltip.classList.remove('visible');
+    });
+
+    filterElements.yearRange.addEventListener('touchend', () => {
+        filterElements.yearTooltip.classList.remove('visible');
+    });
+
+    // Botões de ordenação
+    filterElements.sortBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            const sortField = btn.dataset.sort;
+            
+            filterElements.sortBtns.forEach(b => {
+                b.classList.remove('active', 'asc');
+            });
+
+            if (currentSortFilter.field === sortField && currentSortFilter.order === 'desc') {
+                currentSortFilter.order = 'asc';
+                btn.classList.add('asc');
+            } else {
+                currentSortFilter.order = 'desc';
+            }
+
+            btn.classList.add('active');
+            currentSortFilter.field = sortField;
+            applyMovieFilters();
+        });
+    });
+
+    // Botão reset
+    filterElements.btnReset.addEventListener('click', () => {
+        filterElements.yearMin.value = 1890;
+        filterElements.yearMax.value = 2025;
+        filterElements.yearRange.value = 2025;
+        filterElements.genreSelect.value = '';
+        currentSortFilter = { field: 'ano', order: 'desc' };
+        filterElements.sortBtns.forEach(b => {
+            b.classList.remove('active', 'asc');
+        });
+        filterElements.sortBtns[0].classList.add('active');
+        applyMovieFilters();
+    });
+
+    // Botão aplicar
+    filterElements.btnApply.addEventListener('click', applyMovieFilters);
+    filterElements.genreSelect.addEventListener('change', applyMovieFilters);
+}
+
+function updateGenreOptions() {
+    const genres = Array.from(allGenresSet).sort();
+    filterElements.genreSelect.innerHTML = '<option value="">Todos os gêneros</option>';
+    genres.forEach(genre => {
+        const option = document.createElement('option');
+        option.value = genre;
+        option.textContent = genre;
+        filterElements.genreSelect.appendChild(option);
+    });
+}
+
+function applyMovieFilters() {
+    const minYear = parseInt(filterElements.yearMin.value);
+    const maxYear = parseInt(filterElements.yearMax.value);
+    const selectedGenre = filterElements.genreSelect.value;
+
+    filteredMoviesForDisplay = allMoviesForFilters.filter(movie => {
+        const yearMatch = movie.year >= minYear && movie.year <= maxYear;
+        const genreMatch = !selectedGenre || (movie.genres && movie.genres.includes(selectedGenre));
+        return yearMatch && genreMatch;
+    });
+
+    // Ordenar
+    filteredMoviesForDisplay.sort((a, b) => {
+        let compareValue = 0;
+
+        if (currentSortFilter.field === 'ano') {
+            compareValue = a.year - b.year;
+        } else if (currentSortFilter.field === 'rating') {
+            compareValue = a.rating - b.rating;
+        } else if (currentSortFilter.field === 'titulo') {
+            compareValue = a.title.localeCompare(b.title, 'pt-BR');
+        }
+
+        return currentSortFilter.order === 'desc' ? -compareValue : compareValue;
+    });
+
+    renderMoviesWithFilters();
+}
+
+function renderMoviesWithFilters() {
+    filterElements.moviesGrid.innerHTML = '';
+
+    if (filteredMoviesForDisplay.length === 0) {
+        filterElements.resultsInfo.textContent = 'Nenhum filme encontrado com os filtros selecionados.';
+        return;
+    }
+
+    filterElements.resultsInfo.textContent = `${filteredMoviesForDisplay.length} resultado${filteredMoviesForDisplay.length !== 1 ? 's' : ''} encontrado${filteredMoviesForDisplay.length !== 1 ? 's' : ''}`;
+
+    filteredMoviesForDisplay.forEach(movie => {
+        const card = createMovieCard(movie, movie.type || 'filmes');
+        filterElements.moviesGrid.appendChild(card);
+    });
+}
+
+function createMovieCard(m, type) {
+    const itemId = m.firebaseKey || m.id;
+    const isFavorited = userFavorites.has(itemId);
+    const progress = watchingProgress[itemId];
+    const progressPercent = progress ? Math.round(progress.progress) : 0;
+    
+    return `
+        <div class="movie-card" onclick="openModal('${itemId}')">
+            <div class="movie-poster">
+                <img src="${m.imageUrl}" alt="${m.title}">
+                <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" onclick="toggleFavorite(event, '${itemId}')">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
+                ${progressPercent > 0 ? `<div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%"></div></div>` : ''}
+                <div class="play-icon"></div>
+            </div>
+            <div class="movie-info">
+                <div class="movie-title">${m.title}</div>
+                <div class="movie-meta">
+                    <span>${m.year}</span>
+                    <span>⭐ ${m.rating}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function initializeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchOverlay = document.getElementById('searchOverlay');
+    const searchPanel = document.getElementById('searchResultsPanel');
+
+    // Input de busca
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim().toLowerCase();
+
+        if (query.length < 2) {
+            hideSearchResults();
+            return;
+        }
+
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300);
+    });
+
+    // Overlay click
+    searchOverlay.addEventListener('click', () => {
+        hideSearchResults();
+        searchInput.classList.remove('active');
+        document.querySelector('.search-container').classList.remove('active');
+    });
+
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideSearchResults();
+            searchInput.classList.remove('active');
+            document.querySelector('.search-container').classList.remove('active');
+        }
+    });
+}
+
+function performSearch(query) {
+    const allContent = [...content.filmes, ...content.series, ...content.animes, ...content.animacoes];
+    
+    searchResults = allContent.filter(item => {
+        const titleMatch = item.title.toLowerCase().includes(query);
+        const genreMatch = item.genres && item.genres.some(g => g.toLowerCase().includes(query));
+        const yearMatch = item.year.toString().includes(query);
+        const descriptionMatch = item.description.toLowerCase().includes(query);
+        
+        return titleMatch || genreMatch || yearMatch || descriptionMatch;
+    });
+
+    // Ordenar por relevância
+    searchResults.sort((a, b) => {
+        const aTitle = a.title.toLowerCase();
+        const bTitle = b.title.toLowerCase();
+        const aStartsWith = aTitle.startsWith(query);
+        const bStartsWith = bTitle.startsWith(query);
+        
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        
+        return aTitle.localeCompare(bTitle, 'pt-BR');
+    });
+
+    displaySearchResults(query);
+}
+
+function displaySearchResults(query) {
+    const panel = document.getElementById('searchResultsPanel');
+    
+    if (searchResults.length === 0) {
+        panel.innerHTML = `
+            <div class="search-results-header">
+                <div class="search-results-title">Resultados da Busca</div>
+                <div class="search-results-count">0 resultados</div>
+            </div>
+            <div class="search-no-results">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <div class="search-no-results-text">Nenhum resultado encontrado</div>
+                <div class="search-no-results-hint">Tente buscar por outro título, gênero ou ano</div>
+            </div>
+        `;
+    } else {
+        const resultsHTML = searchResults.map(item => {
+            const itemId = item.firebaseKey || item.id;
+            const type = content.filmes.find(f => (f.firebaseKey || f.id) === itemId) ? 'Filme' :
+                         content.series.find(s => (s.firebaseKey || s.id) === itemId) ? 'Série' : 'Anime';
+            
+            return `
+                <div class="search-result-item" onclick="openModalFromSearch('${itemId}')">
+                    <img src="${item.imageUrl}" alt="${item.title}" class="search-result-poster" onerror="this.src='https://via.placeholder.com/70x100?text=No+Image'">
+                    <div class="search-result-info">
+                        <div class="search-result-title">${highlightText(item.title, query)}</div>
+                        <div class="search-result-meta">
+                            <span class="search-result-type">${type}</span>
+                            <span>${item.year}</span>
+                            <span>⭐ ${item.rating}</span>
+                        </div>
+                        <div class="search-result-genres">
+                            ${item.genres.slice(0, 3).map(g => `<span class="search-result-genre">${g}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        panel.innerHTML = `
+            <div class="search-results-header">
+                <div class="search-results-title">Resultados da Busca</div>
+                <div class="search-results-count">${searchResults.length} resultado${searchResults.length !== 1 ? 's' : ''}</div>
+            </div>
+            ${resultsHTML}
+        `;
+    }
+
+    showSearchResults();
+}
+
+function highlightText(text, query) {
+    const regex = new RegExp(`(${query})`, 'gi');
+    return text.replace(regex, '<strong style="color: #8063e7;">$1</strong>');
+}
+
+function showSearchResults() {
+    document.getElementById('searchOverlay').classList.add('active');
+    document.getElementById('searchResultsPanel').classList.add('active');
+}
+
+function hideSearchResults() {
+    document.getElementById('searchOverlay').classList.remove('active');
+    document.getElementById('searchResultsPanel').classList.remove('active');
+}
+
+function openModalFromSearch(itemId) {
+    hideSearchResults();
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchInput').classList.remove('active');
+    document.querySelector('.search-container').classList.remove('active');
+    openModal(itemId);
+}
+
+
+
     </script>
 </body>
 </html>

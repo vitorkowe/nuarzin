@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NuarDesk</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #100a36 0%, #110e25 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #loginScreen {
+            background: linear-gradient(135deg, #1a0e3f 0%, #15092a 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(124, 53, 236, 0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            border: 2px solid #7c35ec;
+        }
+
+        #loginScreen h1 {
+            color: #8063e7;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+
+        #loginScreen input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #5c45af;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border 0.3s;
+            background: #0f0820;
+            color: #e8e8ff;
+        }
+
+        #loginScreen input:focus {
+            outline: none;
+            border-color: #7c35ec;
+            box-shadow: 0 0 10px rgba(124, 53, 236, 0.5);
+        }
+
+        #loginScreen input::placeholder {
+            color: #8063e7;
+        }
+
+        #loginScreen p {
+            color: #8063e7;
+        }
+
+        .characterGrid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .characterOption {
+            cursor: pointer;
+            padding: 15px;
+            border: 3px solid #5c45af;
+            border-radius: 10px;
+            transition: all 0.3s;
+            background: #0f0820;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 120px;
+        }
+
+        .characterOption:hover {
+            transform: scale(1.05);
+            background: #1a0e3f;
+            border-color: #8063e7;
+        }
+
+        .characterOption.selected {
+            border-color: #7c35ec;
+            background: #2a1a5f;
+            box-shadow: 0 5px 15px rgba(124, 53, 236, 0.4);
+        }
+
+        .characterOption img {
+            max-width: 80px;
+            max-height: 100px;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        #joinButton {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #7c35ec 0%, #5c45af 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin-top: 20px;
+        }
+
+        #joinButton:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(124, 53, 236, 0.4);
+        }
+
+        #joinButton:disabled {
+            background: #5c45af;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        #gameScreen {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        #gameContainer {
+            display: flex;
+            height: 100%;
+        }
+
+        #canvasWrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #100c2b;
+            position: relative;
+            overflow: auto;
+        }
+
+        #gameCanvas {
+            border: 4px solid #7c35ec;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(124, 53, 236, 0.5);
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            display: block;
+            cursor: pointer;
+        }
+
+        #chatPanel {
+            width: 380px;
+            background: #0f0820;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.4);
+            border-left: 2px solid #5c45af;
+        }
+
+        #chatHeader {
+            background: linear-gradient(135deg, #7c35ec 0%, #5c45af 100%);
+            color: white;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #chatMessages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #110e25;
+        }
+
+        .chatMessage {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #100a36;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(124, 53, 236, 0.3);
+            animation: fadeIn 0.3s;
+            border: 1px solid #5c45af;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chatMessage .name {
+            font-weight: bold;
+            color: #8063e7;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chatMessage .name img {
+            width: 24px;
+            height: 24px;
+            image-rendering: pixelated;
+        }
+
+        .chatMessage .text {
+            color: #e8e8ff;
+            word-wrap: break-word;
+        }
+
+        .chatMessage .time {
+            font-size: 11px;
+            color: #8063e7;
+            margin-top: 5px;
+        }
+
+        .systemMessage {
+            text-align: center;
+            color: #8063e7;
+            font-style: italic;
+            font-size: 14px;
+            margin: 10px 0;
+            padding: 8px;
+            background: #100a36;
+            border-radius: 5px;
+            border: 1px solid #5c45af;
+        }
+
+        #chatInputArea {
+            padding: 15px;
+            background: #0f0820;
+            border-top: 2px solid #5c45af;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #emojiPanel {
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 10px;
+            background: #100a36;
+            border-radius: 8px;
+            border: 1px solid #5c45af;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        #emojiPanel.show {
+            display: grid;
+        }
+
+        .emoji-btn {
+            padding: 8px;
+            background: #0f0820;
+            border: 1px solid #5c45af;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            color: #e8e8ff;
+        }
+
+        .emoji-btn:hover {
+            background: #1a0e3f;
+            border-color: #7c35ec;
+            transform: scale(1.1);
+        }
+
+        #inputRow {
+            display: flex;
+            gap: 8px;
+        }
+
+        #chatInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #5c45af;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+            background: #110e25;
+            color: #e8e8ff;
+        }
+
+        #chatInput:focus {
+            outline: none;
+            border-color: #7c35ec;
+            box-shadow: 0 0 8px rgba(124, 53, 236, 0.3);
+        }
+
+        #chatInput::placeholder {
+            color: #8063e7;
+        }
+
+        #emojiToggle {
+            padding: 12px 12px;
+            background: linear-gradient(135deg, #7c35ec 0%, #5c45af 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        #emojiToggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 10px rgba(124, 53, 236, 0.4);
+        }
+
+        #playerInfo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 8, 32, 0.95);
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(124, 53, 236, 0.3);
+            z-index: 10;
+            border: 2px solid #5c45af;
+        }
+
+        #playerInfo div {
+            margin: 5px 0;
+            color: #e8e8ff;
+            font-size: 14px;
+        }
+
+        #playerInfo strong {
+            color: #8063e7;
+        }
+
+        #onlinePlayers {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(16, 12, 43, 0.95);
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(124, 53, 236, 0.3);
+            z-index: 10;
+            max-width: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #5c45af;
+        }
+
+        #onlinePlayers h3 {
+            color: #8063e7;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .playerListItem {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+            font-size: 13px;
+            color: #e8e8ff;
+        }
+
+        .playerListItem img {
+            width: 24px;
+            height: 24px;
+            image-rendering: pixelated;
+        }
+
+        @media (max-width: 768px) {
+            #gameContainer {
+                flex-direction: column-reverse;
+            }
+            
+            #chatPanel {
+                width: 100%;
+                height: 40vh;
+            }
+
+            #canvasWrapper {
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginScreen">
+        <h1>NuarDesk</h1>
+        <input type="text" id="nameInput" placeholder="Digite seu nome" maxlength="20">
+        <p style="margin: 20px 0; font-weight: bold;">Escolha seu personagem:</p>
+        <div class="characterGrid" id="characterGrid">
+        </div>
+        <button id="joinButton" disabled>Entrar no Escritório</button>
+    </div>
+
+    <div id="gameScreen">
+        <div id="gameContainer">
+            <div id="canvasWrapper">
+                <div id="playerInfo">
+                    <div><strong>Você:</strong> <span id="yourName"></span></div>
+                    <div style="font-size: 12px; color: #8063e7; margin-top: 10px;">
+                        Clique para mover<br>ou use WASD/Setas
+                    </div>
+                </div>
+                <div id="onlinePlayers">
+                    <h3>Online (<span id="onlineCount">0</span>)</h3>
+                    <div id="playersList"></div>
+                </div>
+                <canvas id="gameCanvas"></canvas>
+            </div>
+            <div id="chatPanel">
+                <div id="chatHeader">Chat do Escritório</div>
+                <div id="chatMessages"></div>
+                <div id="chatInputArea">
+                    <div id="emojiPanel"></div>
+                    <div id="inputRow">
+                        <input type="text" id="chatInput" placeholder="Digite sua mensagem..." maxlength="200">
+                        <button id="emojiToggle">:-)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Configuration - SEU FIREBASE INTEGRADO
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHlEtmKXGeAsY9Ih-BBP-yiGrKJIKRD9k",
+            authDomain: "nuarkowe.firebaseapp.com",
+            databaseURL: "https://nuarkowe-default-rtdb.firebaseio.com",
+            projectId: "nuarkowe",
+            storageBucket: "nuarkowe.firebasestorage.app",
+            messagingSenderId: "1063041816951",
+            appId: "1:1063041816951:web:0ffe4185fd0102b878e972"
+        };
+
+        let database;
+        let playersRef;
+        let messagesRef;
+        
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            playersRef = database.ref('players');
+            messagesRef = database.ref('messages');
+            console.log('Firebase conectado com sucesso!');
+        } catch (error) {
+            console.error('Erro ao conectar Firebase:', error);
+        }
+
+        const TILE_SIZE = 32;
+        
+        let players = {};
+        let myId = null;
+        let myName = '';
+        let myCharacter = 0;
+        let targetPosition = null;
+        let chatBubbles = {};
+        
+        const characterImages = {
+            0: { front: null, back: null, left: null, right: null },
+            1: { front: null, back: null, left: null, right: null },
+            2: { front: null, back: null, left: null, right: null },
+            3: { front: null, back: null, left: null, right: null }
+        };
+        let mapImage = new Image();
+        let imagesLoaded = 0;
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const collisionMap = [];
+        const chairPositions = [];
+        
+        const emojiText = [
+            ':)', ':D', ';)', 'XD', ':(', ':/', ':-[', ':P',
+            ':O', ';-)', '8)', '<3'
+        ];
+        
+        function setupCollisions() {
+            const GRID_WIDTH = 41;
+            const GRID_HEIGHT = 19;
+            
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+                collisionMap[y] = [];
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    collisionMap[y][x] = 0;
+                }
+            }
+            
+            for (let y = 0; y < 8; y++) {
+                for (let x = 2; x < 7; x++) collisionMap[y][x] = 1;
+                for (let x = 11; x < 18; x++) collisionMap[y][x] = 1;
+                collisionMap[7][19] = 1;
+                collisionMap[8][19] = 1;
+                for (let x = 30; x < 38; x++) collisionMap[y][x] = 1;
+            }
+            
+            for (let y = 14; y < 19; y++) {
+                for (let x = 9; x < 17; x++) {
+                    collisionMap[y][x] = 1;
+                }
+            }
+            
+            chairPositions.push({ x: 10 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
+            chairPositions.push({ x: 12 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
+            chairPositions.push({ x: 14 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
+            chairPositions.push({ x: 16 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
+            
+            chairPositions.push({ x: 10 * TILE_SIZE, y: 19 * TILE_SIZE, direction: 'back' });
+            chairPositions.push({ x: 12 * TILE_SIZE, y: 19 * TILE_SIZE, direction: 'back' });
+            chairPositions.push({ x: 14 * TILE_SIZE, y: 19 * TILE_SIZE, direction: 'back' });
+            chairPositions.push({ x: 16 * TILE_SIZE, y: 19 * TILE_SIZE, direction: 'back' });
+            
+            chairPositions.push({ x: 8 * TILE_SIZE, y: 15 * TILE_SIZE, direction: 'right' });
+            chairPositions.push({ x: 8 * TILE_SIZE, y: 17 * TILE_SIZE, direction: 'right' });
+            
+            chairPositions.push({ x: 17 * TILE_SIZE, y: 15 * TILE_SIZE, direction: 'left' });
+            chairPositions.push({ x: 17 * TILE_SIZE, y: 17 * TILE_SIZE, direction: 'left' });
+            
+            chairPositions.push({ x: 29 * TILE_SIZE, y: 14 * TILE_SIZE, direction: 'front' });
+            chairPositions.push({ x: 31 * TILE_SIZE, y: 14 * TILE_SIZE, direction: 'front' });
+            chairPositions.push({ x: 33 * TILE_SIZE, y: 14 * TILE_SIZE, direction: 'front' });
+            chairPositions.push({ x: 35 * TILE_SIZE, y: 14 * TILE_SIZE, direction: 'front' });
+            
+            collisionMap[16][15] = 1;
+            collisionMap[15][25] = 1;
+            
+            for (let y = 13; y < 16; y++) {
+                for (let x = 28; x < 37; x++) {
+                    collisionMap[y][x] = 1;
+                }
+            }
+            
+            for (let y = 16; y < 19; y++) {
+                for (let x = 30; x < 35; x++) {
+                    collisionMap[y][x] = 1;
+                }
+            }
+            
+            collisionMap[18][28] = 1;
+            collisionMap[18][29] = 1;
+            collisionMap[18][36] = 1;
+            collisionMap[18][37] = 1;
+            
+            chairPositions.push({ x: 28 * TILE_SIZE, y: 17 * TILE_SIZE, direction: 'front' });
+            chairPositions.push({ x: 36 * TILE_SIZE, y: 17 * TILE_SIZE, direction: 'front' });
+            
+            collisionMap[13][39] = 1;
+            collisionMap[14][39] = 1;
+        }
+
+        setupCollisions();
+
+        const emojiPanel = document.getElementById('emojiPanel');
+        const emojiToggle = document.getElementById('emojiToggle');
+        
+        emojiText.forEach((emoji, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'emoji-btn';
+            btn.textContent = emoji;
+            btn.title = emoji;
+            btn.addEventListener('click', () => {
+                document.getElementById('chatInput').value += emoji;
+                emojiPanel.classList.remove('show');
+                document.getElementById('chatInput').focus();
+            });
+            emojiPanel.appendChild(btn);
+        });
+        
+        emojiToggle.addEventListener('click', () => {
+            emojiPanel.classList.toggle('show');
+        });
+
+        function loadImages() {
+            const characterGrid = document.getElementById('characterGrid');
+            
+            const characterColors = [
+                { name: 'Personagem 1', skin: '#D2691E', hair: '#2C2C2C', shirt: '#4A4A4A', pants: '#1E3A8A' },
+                { name: 'Personagem 2', skin: '#D2691E', hair: '#8B4513', shirt: '#9370DB', pants: '#1E3A8A' },
+                { name: 'Personagem 3', skin: '#F4A460', hair: '#FFD700', shirt: '#87CEEB', pants: '#4169E1' },
+                { name: 'Personagem 4', skin: '#CD853F', hair: '#A0522D', shirt: '#FFA07A', pants: '#2F4F4F' }
+            ];
+            
+            characterColors.forEach((char, i) => {
+                ['front', 'back', 'left', 'right'].forEach(direction => {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 32;
+                    tempCanvas.height = 48;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    if (direction === 'front' || direction === 'back') {
+                        tempCtx.fillStyle = char.skin;
+                        tempCtx.fillRect(8, 8, 16, 16);
+                        
+                        tempCtx.fillStyle = char.hair;
+                        if (direction === 'front') {
+                            tempCtx.fillRect(6, 6, 20, 8);
+                        } else {
+                            tempCtx.fillRect(6, 6, 20, 10);
+                        }
+                        
+                        if (direction === 'front') {
+                            tempCtx.fillStyle = '#000';
+                            tempCtx.fillRect(11, 15, 3, 3);
+                            tempCtx.fillRect(18, 15, 3, 3);
+                        }
+                        
+                        tempCtx.fillStyle = char.shirt;
+                        tempCtx.fillRect(6, 24, 20, 12);
+                        
+                        tempCtx.fillStyle = char.pants;
+                        tempCtx.fillRect(8, 36, 7, 12);
+                        tempCtx.fillRect(17, 36, 7, 12);
+                    } else {
+                        tempCtx.fillStyle = char.skin;
+                        tempCtx.fillRect(direction === 'left' ? 12 : 8, 8, 12, 16);
+                        
+                        tempCtx.fillStyle = char.hair;
+                        tempCtx.fillRect(direction === 'left' ? 10 : 8, 6, 14, 10);
+                        
+                        tempCtx.fillStyle = char.shirt;
+                        tempCtx.fillRect(direction === 'left' ? 10 : 8, 24, 16, 12);
+                        
+                        tempCtx.fillStyle = char.pants;
+                        tempCtx.fillRect(direction === 'left' ? 10 : 8, 36, 7, 12);
+                        tempCtx.fillRect(direction === 'left' ? 15 : 15, 36, 7, 12);
+                    }
+                    
+                    const img = new Image();
+                    img.src = tempCanvas.toDataURL();
+                    characterImages[i][direction] = img;
+                    imagesLoaded++;
+                });
+                
+                const option = document.createElement('div');
+                option.className = 'characterOption';
+                option.dataset.char = i;
+                
+                const previewCanvas = document.createElement('canvas');
+                previewCanvas.width = 32;
+                previewCanvas.height = 48;
+                const previewCtx = previewCanvas.getContext('2d');
+                
+                previewCtx.fillStyle = char.skin;
+                previewCtx.fillRect(8, 8, 16, 16);
+                previewCtx.fillStyle = char.hair;
+                previewCtx.fillRect(6, 6, 20, 8);
+                previewCtx.fillStyle = '#000';
+                previewCtx.fillRect(11, 15, 3, 3);
+                previewCtx.fillRect(18, 15, 3, 3);
+                previewCtx.fillStyle = char.shirt;
+                previewCtx.fillRect(6, 24, 20, 12);
+                previewCtx.fillStyle = char.pants;
+                previewCtx.fillRect(8, 36, 7, 12);
+                previewCtx.fillRect(17, 36, 7, 12);
+                
+                const img = document.createElement('img');
+                img.src = previewCanvas.toDataURL();
+                option.appendChild(img);
+                characterGrid.appendChild(option);
+                
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.characterOption').forEach(opt => 
+                        opt.classList.remove('selected')
+                    );
+                    option.classList.add('selected');
+                    myCharacter = i;
+                    updateJoinButton();
+                });
+            });
+            
+            mapImage.crossOrigin = 'anonymous';
+            mapImage.onload = () => {
+                console.log('Map loaded successfully!');
+                canvas.width = mapImage.width;
+                canvas.height = mapImage.height;
+                imagesLoaded++;
+            };
+            mapImage.onerror = (e) => {
+                console.error('Map image failed to load:', e);
+                canvas.width = 1316;
+                canvas.height = 624;
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                tempCtx.fillStyle = '#c5cad6';
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                tempCtx.fillStyle = '#b0b8c8';
+                tempCtx.fillRect(0, 0, tempCanvas.width, 250);
+                
+                tempCtx.fillStyle = '#8090a0';
+                tempCtx.fillRect(50, 50, 150, 150);
+                tempCtx.fillStyle = '#9098a8';
+                tempCtx.fillRect(65, 65, 60, 120);
+                tempCtx.fillRect(135, 65, 60, 120);
+                
+                tempCtx.fillStyle = '#7080a0';
+                tempCtx.fillRect(350, 50, 200, 150);
+                for (let i = 0; i < 3; i++) {
+                    tempCtx.fillStyle = '#5060a0';
+                    tempCtx.fillRect(360, 60 + i * 45, 180, 35);
+                    for (let j = 0; j < 8; j++) {
+                        const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a8e6cf', '#ff8b94'];
+                        tempCtx.fillStyle = colors[j % colors.length];
+                        tempCtx.fillRect(365 + j * 22, 65 + i * 45, 18, 25);
+                    }
+                }
+                
+                tempCtx.fillStyle = '#a0e0ff';
+                tempCtx.fillRect(950, 50, 180, 150);
+                tempCtx.fillRect(1150, 50, 180, 150);
+                tempCtx.strokeStyle = '#708090';
+                tempCtx.lineWidth = 8;
+                tempCtx.strokeRect(950, 50, 180, 150);
+                tempCtx.strokeRect(1150, 50, 180, 150);
+                
+                tempCtx.fillStyle = '#d0d8e0';
+                tempCtx.fillRect(300, 450, 250, 150);
+                tempCtx.fillStyle = '#90b8d0';
+                tempCtx.fillRect(310, 460, 230, 130);
+                
+                tempCtx.fillStyle = '#4080c0';
+                [280, 570].forEach(x => {
+                    [430, 480, 530].forEach(y => {
+                        tempCtx.fillRect(x, y, 40, 40);
+                    });
+                });
+                [330, 380, 430, 480].forEach(x => {
+                    tempCtx.fillRect(x, 410, 40, 40);
+                    tempCtx.fillRect(x, 610, 40, 40);
+                });
+                
+                tempCtx.fillStyle = '#90a0b0';
+                tempCtx.fillRect(900, 420, 280, 100);
+                tempCtx.fillStyle = '#a8b8c8';
+                tempCtx.fillRect(910, 430, 260, 80);
+                
+                tempCtx.fillStyle = '#c8a060';
+                tempCtx.fillRect(950, 540, 180, 80);
+                
+                tempCtx.fillStyle = '#8B4513';
+                [600, 800, 1250].forEach(x => {
+                    tempCtx.fillRect(x, 220, 40, 50);
+                    tempCtx.fillStyle = '#2d5016';
+                    tempCtx.beginPath();
+                    tempCtx.arc(x + 20, 210, 35, 0, Math.PI * 2);
+                    tempCtx.fill();
+                    tempCtx.fillStyle = '#8B4513';
+                });
+                
+                mapImage.src = tempCanvas.toDataURL();
+                imagesLoaded++;
+            };
+            mapImage.src = 'https://i.ibb.co/JWHPx0hy/fb89558f-3f93-4e18-8bbc-7dcf3c9d63ca.png';
+        }
+
+        loadImages();
+
+        const nameInput = document.getElementById('nameInput');
+        const joinButton = document.getElementById('joinButton');
+
+        nameInput.addEventListener('input', updateJoinButton);
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !joinButton.disabled) {
+                joinGame();
+            }
+        });
+
+        function updateJoinButton() {
+            joinButton.disabled = !(nameInput.value.trim() && myCharacter !== null && myCharacter !== undefined);
+        }
+
+        joinButton.addEventListener('click', joinGame);
+
+        function joinGame() {
+            myName = nameInput.value.trim();
+            myId = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            document.getElementById('yourName').textContent = myName;
+            
+            players[myId] = {
+                name: myName,
+                character: myCharacter,
+                x: 650,
+                y: 300,
+                direction: 'front',
+                timestamp: Date.now(),
+                sitting: false,
+                sittingAt: null
+            };
+            
+            if (playersRef) {
+                playersRef.child(myId).set(players[myId]);
+                
+                playersRef.child(myId).onDisconnect().remove();
+                
+                playersRef.on('child_added', (snapshot) => {
+                    const playerId = snapshot.key;
+                    if (playerId !== myId) {
+                        players[playerId] = snapshot.val();
+                        updatePlayersList();
+                    }
+                });
+                
+                playersRef.on('child_changed', (snapshot) => {
+                    const playerId = snapshot.key;
+                    if (playerId !== myId) {
+                        players[playerId] = snapshot.val();
+                    }
+                });
+                
+                playersRef.on('child_removed', (snapshot) => {
+                    const playerId = snapshot.key;
+                    if (playerId !== myId) {
+                        const playerName = players[playerId]?.name;
+                        delete players[playerId];
+                        updatePlayersList();
+                        if (playerName) {
+                            addSystemMessage(`${playerName} saiu do escritório`);
+                        }
+                    }
+                });
+                
+                messagesRef.limitToLast(50).on('child_added', (snapshot) => {
+                    const msg = snapshot.val();
+                    if (msg.playerId !== myId) {
+                        addChatMessage(msg.name, msg.text, msg.character, msg.time, false);
+                    }
+                });
+            }
+            
+            addSystemMessage(`${myName} entrou no escritório`);
+            updatePlayersList();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updatePlayerPosition() {
+            if (playersRef && myId && players[myId]) {
+                playersRef.child(myId).update({
+                    x: players[myId].x,
+                    y: players[myId].y,
+                    direction: players[myId].direction,
+                    timestamp: Date.now()
+                });
+            }
+        }
+
+        let lastPositionUpdate = 0;
+
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && chatInput.value.trim()) {
+                sendMessage(chatInput.value.trim());
+                chatInput.value = '';
+            }
+        });
+
+        function sendMessage(text) {
+            const time = new Date().toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            const messageData = {
+                playerId: myId,
+                name: myName,
+                text: text,
+                character: myCharacter,
+                time: time,
+                timestamp: Date.now()
+            };
+            
+            chatBubbles[myId] = {
+                text: text,
+                timestamp: Date.now(),
+                opacity: 1
+            };
+            
+            if (messagesRef) {
+                messagesRef.push(messageData);
+            }
+            
+            addChatMessage(myName, text, myCharacter, time, true);
+        }
+
+        function addChatMessage(name, text, charIndex, time, isMe) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chatMessage';
+            
+            const charImg = characterImages[charIndex]?.front;
+            const imgSrc = charImg ? charImg.src : '';
+            
+            msgDiv.innerHTML = `
+                <div class="name">
+                    ${imgSrc ? `<img src="${imgSrc}">` : ''}
+                    ${escapeHtml(name)}${isMe ? ' (você)' : ''}
+                </div>
+                <div class="text">${escapeHtml(text)}</div>
+                <div class="time">${time}</div>
+            `;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'systemMessage';
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updatePlayersList() {
+            const playersList = document.getElementById('playersList');
+            const onlineCount = document.getElementById('onlineCount');
+            
+            playersList.innerHTML = '';
+            onlineCount.textContent = Object.keys(players).length;
+            
+            Object.entries(players).forEach(([id, player]) => {
+                const item = document.createElement('div');
+                item.className = 'playerListItem';
+                
+                const charImg = characterImages[player.character]?.front;
+                const imgTag = charImg ? `<img src="${charImg.src}">` : '';
+                
+                item.innerHTML = `${imgTag} ${player.name}${id === myId ? ' (você)' : ''}`;
+                playersList.appendChild(item);
+            });
+        }
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clickX = (e.clientX - rect.left) * scaleX;
+            const clickY = (e.clientY - rect.top) * scaleY;
+            
+            let clickedChair = null;
+            for (let chair of chairPositions) {
+                const distance = Math.sqrt(
+                    Math.pow(clickX - chair.x, 2) + 
+                    Math.pow(clickY - chair.y, 2)
+                );
+                if (distance < 40) {
+                    clickedChair = chair;
+                    break;
+                }
+            }
+            
+            if (clickedChair) {
+                const player = players[myId];
+                if (player) {
+                    player.sitting = true;
+                    player.sittingAt = clickedChair;
+                    player.x = clickedChair.x;
+                    player.y = clickedChair.y;
+                    player.direction = clickedChair.direction;
+                    targetPosition = null;
+                    updatePlayerPosition();
+                }
+            }
+        });
+
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            keys[e.key.toLowerCase()] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        function handleKeyboardMovement() {
+            const player = players[myId];
+            if (!player) return;
+            
+            if (player.sitting) {
+                if (keys['w'] || keys['s'] || keys['a'] || keys['d'] || 
+                    keys['arrowup'] || keys['arrowdown'] || keys['arrowleft'] || keys['arrowright']) {
+                    player.sitting = false;
+                    player.sittingAt = null;
+                }
+                return;
+            }
+            
+            const speed = 4;
+            let dx = 0;
+            let dy = 0;
+            
+            if (keys['w'] || keys['arrowup']) {
+                dy = -speed;
+                player.direction = 'back';
+            }
+            if (keys['s'] || keys['arrowdown']) {
+                dy = speed;
+                player.direction = 'front';
+            }
+            if (keys['a'] || keys['arrowleft']) {
+                dx = -speed;
+                player.direction = 'left';
+            }
+            if (keys['d'] || keys['arrowright']) {
+                dx = speed;
+                player.direction = 'right';
+            }
+            
+            if (dx !== 0 || dy !== 0) {
+                const newX = player.x + dx;
+                const newY = player.y + dy;
+                
+                const gridX = Math.floor(newX / TILE_SIZE);
+                const gridY = Math.floor(newY / TILE_SIZE);
+                
+                if (gridY >= 0 && gridY < collisionMap.length && 
+                    gridX >= 0 && gridX < collisionMap[0].length &&
+                    collisionMap[gridY][gridX] === 0) {
+                    player.x = Math.max(0, Math.min(canvas.width, newX));
+                    player.y = Math.max(0, Math.min(canvas.height, newY));
+                }
+            }
+        }
+
+        function updateMovement() {
+            const player = players[myId];
+            if (!player || player.sitting) return;
+            
+            if (targetPosition) {
+                const dx = targetPosition.x - player.x;
+                const dy = targetPosition.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 3) {
+                    const speed = 3;
+                    player.x += (dx / distance) * speed;
+                    player.y += (dy / distance) * speed;
+                    
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        player.direction = dx > 0 ? 'right' : 'left';
+                    } else {
+                        player.direction = dy > 0 ? 'front' : 'back';
+                    }
+                } else {
+                    player.x = targetPosition.x;
+                    player.y = targetPosition.y;
+                    targetPosition = null;
+                }
+            }
+            
+            const now = Date.now();
+            if (now - lastPositionUpdate > 100) {
+                updatePlayerPosition();
+                lastPositionUpdate = now;
+            }
+        }
+        
+        function updateChatBubbles() {
+            const now = Date.now();
+            const FADE_START = 10000;
+            const FADE_DURATION = 5000;
+            
+            Object.keys(chatBubbles).forEach(playerId => {
+                const bubble = chatBubbles[playerId];
+                const elapsed = now - bubble.timestamp;
+                
+                if (elapsed > FADE_START) {
+                    const fadeProgress = (elapsed - FADE_START) / FADE_DURATION;
+                    bubble.opacity = Math.max(0, 1 - fadeProgress);
+                    
+                    if (bubble.opacity <= 0) {
+                        delete chatBubbles[playerId];
+                    }
+                }
+            });
+        }
+
+        function drawGame() {
+            ctx.drawImage(mapImage, 0, 0, canvas.width, canvas.height);
+            
+            Object.entries(players).forEach(([id, player]) => {
+                drawCharacter(player, id === myId);
+            });
+            
+            Object.entries(players).forEach(([id, player]) => {
+                if (chatBubbles[id]) {
+                    drawChatBubble(id, player);
+                }
+            });
+        }
+
+        function drawCharacter(player, isMe) {
+            const charImg = characterImages[player.character]?.[player.direction];
+            
+            if (charImg && charImg.complete) {
+                const scale = 2;
+                const w = charImg.width * scale;
+                const h = charImg.height * scale;
+                
+                let drawY = player.y;
+                if (player.sitting) {
+                    drawY += 8;
+                }
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(player.x, drawY + h/2, w/4, h/8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.drawImage(charImg, player.x - w/2, drawY - h/2, w, h);
+                
+                if (isMe) {
+                    ctx.strokeStyle = '#3498db';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(player.x - w/2 - 2, drawY - h/2 - 2, w + 4, h + 4);
+                }
+            }
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            const nameWidth = ctx.measureText(player.name).width;
+            const nameX = player.x;
+            const nameY = player.y - 45;
+            
+            ctx.fillRect(nameX - nameWidth/2 - 6, nameY - 14, nameWidth + 12, 18);
+            ctx.fillStyle = 'white';
+            ctx.fillText(player.name, nameX, nameY);
+        }
+        
+        function drawChatBubble(playerId, player) {
+            const bubble = chatBubbles[playerId];
+            if (!bubble || bubble.opacity <= 0) return;
+            
+            const text = bubble.text;
+            const maxWidth = 250;
+            const padding = 12;
+            const lineHeight = 18;
+            
+            ctx.font = 'bold 14px Arial';
+            
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = '';
+            
+            words.forEach(word => {
+                const testLine = currentLine + (currentLine ? ' ' : '') + word;
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth - padding * 2) {
+                    if (currentLine) lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            });
+            if (currentLine) lines.push(currentLine);
+            
+            const bubbleWidth = Math.min(maxWidth, Math.max(...lines.map(l => ctx.measureText(l).width)) + padding * 2);
+            const bubbleHeight = lines.length * lineHeight + padding * 2;
+            
+            const bubbleX = player.x;
+            const bubbleY = player.y - 70 - bubbleHeight;
+            
+            ctx.globalAlpha = bubble.opacity;
+            
+            ctx.fillStyle = '#110e25';
+            ctx.strokeStyle = '#7c35ec';
+            ctx.lineWidth = 3;
+            
+            const radius = 10;
+            ctx.beginPath();
+            ctx.moveTo(bubbleX - bubbleWidth/2 + radius, bubbleY);
+            ctx.lineTo(bubbleX + bubbleWidth/2 - radius, bubbleY);
+            ctx.quadraticCurveTo(bubbleX + bubbleWidth/2, bubbleY, bubbleX + bubbleWidth/2, bubbleY + radius);
+            ctx.lineTo(bubbleX + bubbleWidth/2, bubbleY + bubbleHeight - radius);
+            ctx.quadraticCurveTo(bubbleX + bubbleWidth/2, bubbleY + bubbleHeight, bubbleX + bubbleWidth/2 - radius, bubbleY + bubbleHeight);
+            ctx.lineTo(bubbleX - bubbleWidth/2 + radius, bubbleY + bubbleHeight);
+            ctx.quadraticCurveTo(bubbleX - bubbleWidth/2, bubbleY + bubbleHeight, bubbleX - bubbleWidth/2, bubbleY + bubbleHeight - radius);
+            ctx.lineTo(bubbleX - bubbleWidth/2, bubbleY + radius);
+            ctx.quadraticCurveTo(bubbleX - bubbleWidth/2, bubbleY, bubbleX - bubbleWidth/2 + radius, bubbleY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(bubbleX - 10, bubbleY + bubbleHeight);
+            ctx.lineTo(bubbleX, bubbleY + bubbleHeight + 10);
+            ctx.lineTo(bubbleX + 10, bubbleY + bubbleHeight);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.fillStyle = '#e8e8ff';
+            ctx.textAlign = 'center';
+            lines.forEach((line, i) => {
+                ctx.fillText(line, bubbleX, bubbleY + padding + (i + 1) * lineHeight - 3);
+            });
+            
+            ctx.globalAlpha = 1;
+        }
+
+        let lastFrameTime = 0;
+        function gameLoop(currentTime) {
+            const deltaTime = currentTime - lastFrameTime;
+            lastFrameTime = currentTime;
+            
+            handleKeyboardMovement();
+            updateMovement();
+            updateChatBubbles();
+            drawGame();
+            
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>

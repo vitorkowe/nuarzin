@@ -3432,39 +3432,46 @@ function setEpisodeCount(itemId, season, count) {
         }
 
         function loadContentFromFirebase() {
-    // ... seu código existente ...
+    let loadedSections = 0;
+    const totalSections = 4;
+    
+    const checkAllLoaded = () => {
+        loadedSections++;
+        if (loadedSections === totalSections) {
+            updateFiltersList();
+            renderMovies();
+            // Aplicar filtros iniciais após tudo carregar
+            setTimeout(() => applyMovieFilters(), 100);
+        }
+    };
     
     database.ref('content/filmes').on('value', (snapshot) => {
         const data = snapshot.val();
         content.filmes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'filmes'})) : [];
-        updateFiltersList();
-        renderMovies();
+        checkAllLoaded();
     });
 
     database.ref('content/series').on('value', (snapshot) => {
         const data = snapshot.val();
         content.series = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'series'})) : [];
-        updateFiltersList();
-        renderMovies();
+        checkAllLoaded();
     });
 
     database.ref('content/animes').on('value', (snapshot) => {
         const data = snapshot.val();
         content.animes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'animes'})) : [];
-        updateFiltersList();
-        renderMovies();
+        checkAllLoaded();
+    });
 
-        database.ref('content/animacoes').on('value', (snapshot) => {
-    const data = snapshot.val();
-    content.animacoes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'animacoes'})) : [];
-    updateFiltersList();
-    renderMovies();
-});
+    database.ref('content/animacoes').on('value', (snapshot) => {
+        const data = snapshot.val();
+        content.animacoes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'animacoes'})) : [];
+        checkAllLoaded();
     });
 }
 
 function updateFiltersList() {
-    allMoviesForFilters = [...content.filmes, ...content.series, ...content.animes];
+    allMoviesForFilters = [...content.filmes, ...content.series, ...content.animes, ...content.animacoes];
     allGenresSet.clear();
     
     allMoviesForFilters.forEach(movie => {
@@ -3474,7 +3481,8 @@ function updateFiltersList() {
     });
     
     updateGenreOptions();
-    applyMovieFilters();
+    
+    // Não aplicar filtros aqui - será aplicado após o carregamento completo
 }
 
         function saveContentToFirebase(type, itemData) {
@@ -4168,50 +4176,53 @@ window.showSeason = function(season, itemId) {
         });
 
         function renderMovies() {
-            const adminUser = auth.currentUser;
-            const isAdmin = adminUser && adminUser.email === 'kowe@gmail.com';
-            
-            const moviesGrid = document.getElementById('moviesGrid');
-            const seriesGrid = document.getElementById('seriesGrid');
-            const animesGrid = document.getElementById('animesGrid');
-
-            if (isAdmin) {
-                document.body.classList.add('admin-mode-active');
-            } else {
-                document.body.classList.remove('admin-mode-active');
-            }
-
-            if (moviesGrid) {
-                moviesGrid.innerHTML = content.filmes.length > 0 
-                    ? content.filmes.map(m => createMovieCard(m, 'filmes')).join('')
-                    : '<div class="loading">Nenhum filme encontrado</div>';
-                
-                if (isAdmin) setupDragAndDrop(moviesGrid, 'filmes');
-            }
-            if (seriesGrid) {
-                seriesGrid.innerHTML = content.series.length > 0 
-                    ? content.series.map(m => createMovieCard(m, 'series')).join('')
-                    : '<div class="loading">Nenhuma série encontrada</div>';
-                
-                if (isAdmin) setupDragAndDrop(seriesGrid, 'series');
-            }
-            if (animesGrid) {
-                animesGrid.innerHTML = content.animes.length > 0 
-                    ? content.animes.map(m => createMovieCard(m, 'animes')).join('')
-                    : '<div class="loading">Nenhum anime encontrado</div>';
-                
-                if (isAdmin) setupDragAndDrop(animesGrid, 'animes');
-            }
-            if (animacoesGrid) {
-    animacoesGrid.innerHTML = content.animacoes.length > 0 
-        ? content.animacoes.map(m => createMovieCard(m, 'animacoes')).join('')
-        : '<div class="loading">Nenhuma animação encontrada</div>';
+    const adminUser = auth.currentUser;
+    const isAdmin = adminUser && adminUser.email === 'kowe@gmail.com';
     
-    if (isAdmin) setupDragAndDrop(animacoesGrid, 'animacoes');
-}
+    const moviesGrid = document.getElementById('moviesGrid');
+    const seriesGrid = document.getElementById('seriesGrid');
+    const animesGrid = document.getElementById('animesGrid');
+    const animacoesGrid = document.getElementById('animacoesGrid');
 
-            renderContinueWatching();
-        }
+    if (isAdmin) {
+        document.body.classList.add('admin-mode-active');
+    } else {
+        document.body.classList.remove('admin-mode-active');
+    }
+
+    // Renderizar séries
+    if (seriesGrid) {
+        seriesGrid.innerHTML = content.series.length > 0 
+            ? content.series.map(m => createMovieCard(m, 'series')).join('')
+            : '<div class="loading">Nenhuma série encontrada</div>';
+        
+        if (isAdmin) setupDragAndDrop(seriesGrid, 'series');
+    }
+    
+    // Renderizar animes
+    if (animesGrid) {
+        animesGrid.innerHTML = content.animes.length > 0 
+            ? content.animes.map(m => createMovieCard(m, 'animes')).join('')
+            : '<div class="loading">Nenhum anime encontrado</div>';
+        
+        if (isAdmin) setupDragAndDrop(animesGrid, 'animes');
+    }
+    
+    // Renderizar animações
+    if (animacoesGrid) {
+        animacoesGrid.innerHTML = content.animacoes.length > 0 
+            ? content.animacoes.map(m => createMovieCard(m, 'animacoes')).join('')
+            : '<div class="loading">Nenhuma animação encontrada</div>';
+        
+        if (isAdmin) setupDragAndDrop(animacoesGrid, 'animacoes');
+    }
+
+    // Renderizar filmes (COM FILTROS)
+    // A grid de filmes é renderizada pela função applyMovieFilters()
+    // Não renderizar aqui para evitar conflito
+
+    renderContinueWatching();
+}
 
         function setupDragAndDrop(gridElement, gridType) {
             const cards = gridElement.querySelectorAll('.movie-card');
@@ -4319,65 +4330,69 @@ window.showSeason = function(season, itemId) {
         }
 
         function createMovieCard(m, type) {
-            const adminUser = auth.currentUser;
-            const isAdmin = adminUser && adminUser.email === 'kowe@gmail.com';
-            const genresText = m.genres.join(' • ');
-            const itemId = m.firebaseKey || m.id;
-            
-            return `
-                <div class="movie-card" data-item-id="${itemId}" onclick="openModal('${itemId}')">
-                    <div class="movie-poster">
-                        <img src="${m.imageUrl}" alt="${m.title}">
-                        ${isAdmin ? `
-                        <button class="delete-btn show" 
-                                data-id="${itemId}" 
-                                onclick="deleteContent(event, '${itemId}', '${type}')">
-                            <svg viewBox="0 0 24 24" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                <line x1="10" y1="11" x2="10" y2="17"/>
-                                <line x1="14" y1="11" x2="14" y2="17"/>
-                            </svg>
-                        </button>
-                        <button class="edit-btn show" 
-                                data-id="${itemId}" 
-                                onclick="openEditModal(event, '${itemId}', '${type}')">
-                            <svg viewBox="0 0 24 24" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                        </button>
-                        ` : ''}
-                        <button class="favorite-btn ${userFavorites.has(itemId) ? 'favorited' : ''}" 
-                                data-id="${itemId}" 
-                                onclick="toggleFavorite(event, '${itemId}')">
-                            <svg viewBox="0 0 24 24" stroke-width="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                            </svg>
-                        </button>
-                        <div class="genre-badge" title="${genresText}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 0 1 0 2.828l-7 7a2 2 0 0 1-2.828 0l-7-7A1.994 1.994 0 0 1 3 12V7a4 4 0 0 1 4-4z"/>
-                            </svg>
-                            ${genresText}
-                        </div>
-                        <div class="play-icon"></div>
-                    </div>
-                    <div class="movie-info">
-                        <div class="movie-title">${m.title}</div>
-                        <div class="movie-meta">
-                            <span class="rating">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                </svg>
-                                ${m.rating}
-                            </span>
-                            <span>${m.year}</span>
-                        </div>
-                    </div>
+    const adminUser = auth.currentUser;
+    const isAdmin = adminUser && adminUser.email === 'kowe@gmail.com';
+    const genresText = m.genres.join(' • ');
+    const itemId = m.firebaseKey || m.id;
+    const isFavorited = userFavorites.has(itemId);
+    const progress = watchingProgress[itemId];
+    const progressPercent = progress ? Math.round(progress.progress) : 0;
+    
+    return `
+        <div class="movie-card" data-item-id="${itemId}" onclick="openModal('${itemId}')">
+            <div class="movie-poster">
+                <img src="${m.imageUrl}" alt="${m.title}">
+                ${isAdmin ? `
+                <button class="delete-btn show" 
+                        data-id="${itemId}" 
+                        onclick="deleteContent(event, '${itemId}', '${type}')">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/>
+                        <line x1="14" y1="11" x2="14" y2="17"/>
+                    </svg>
+                </button>
+                <button class="edit-btn show" 
+                        data-id="${itemId}" 
+                        onclick="openEditModal(event, '${itemId}', '${type}')">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                </button>
+                ` : ''}
+                <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" 
+                        data-id="${itemId}" 
+                        onclick="toggleFavorite(event, '${itemId}')">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
+                <div class="genre-badge" title="${genresText}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 0 1 0 2.828l-7 7a2 2 0 0 1-2.828 0l-7-7A1.994 1.994 0 0 1 3 12V7a4 4 0 0 1 4-4z"/>
+                    </svg>
+                    ${genresText}
                 </div>
-            `;
-        }
+                ${progressPercent > 0 ? `<div class="progress-text">${progressPercent}% assistido</div><div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%"></div></div>` : ''}
+                <div class="play-icon"></div>
+            </div>
+            <div class="movie-info">
+                <div class="movie-title">${m.title}</div>
+                <div class="movie-meta">
+                    <span class="rating">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        ${m.rating}
+                    </span>
+                    <span>${m.year}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
 
         function createMovieCardWithProgress(m, type, progress) {
             const adminUser = auth.currentUser;
@@ -5249,7 +5264,13 @@ function applyMovieFilters() {
     const maxYear = parseInt(filterElements.yearMax.value);
     const selectedGenre = filterElements.genreSelect.value;
 
-    filteredMoviesForDisplay = allMoviesForFilters.filter(movie => {
+    // Se não há filmes carregados ainda, mostrar loading
+    if (content.filmes.length === 0) {
+        filterElements.moviesGrid.innerHTML = '<div class="loading">Carregando filmes...</div>';
+        return;
+    }
+
+    filteredMoviesForDisplay = content.filmes.filter(movie => {
         const yearMatch = movie.year >= minYear && movie.year <= maxYear;
         const genreMatch = !selectedGenre || (movie.genres && movie.genres.includes(selectedGenre));
         return yearMatch && genreMatch;
@@ -5274,19 +5295,21 @@ function applyMovieFilters() {
 }
 
 function renderMoviesWithFilters() {
+    const adminUser = auth.currentUser;
+    const isAdmin = adminUser && adminUser.email === 'kowe@gmail.com';
+    
     filterElements.moviesGrid.innerHTML = '';
 
     if (filteredMoviesForDisplay.length === 0) {
-        filterElements.resultsInfo.textContent = 'Nenhum filme encontrado com os filtros selecionados.';
+        filterElements.moviesGrid.innerHTML = '<div class="loading">Nenhum filme encontrado com os filtros selecionados.</div>';
         return;
     }
 
-    filterElements.resultsInfo.textContent = `${filteredMoviesForDisplay.length} resultado${filteredMoviesForDisplay.length !== 1 ? 's' : ''} encontrado${filteredMoviesForDisplay.length !== 1 ? 's' : ''}`;
-
-    filteredMoviesForDisplay.forEach(movie => {
-        const card = createMovieCard(movie, movie.type || 'filmes');
-        filterElements.moviesGrid.appendChild(card);
-    });
+    filterElements.moviesGrid.innerHTML = filteredMoviesForDisplay.map(m => createMovieCard(m, 'filmes')).join('');
+    
+    if (isAdmin) {
+        setupDragAndDrop(filterElements.moviesGrid, 'filmes');
+    }
 }
 
 function createMovieCard(m, type) {
@@ -5459,8 +5482,6 @@ function openModalFromSearch(itemId) {
     document.querySelector('.search-container').classList.remove('active');
     openModal(itemId);
 }
-
-
 
     </script>
 </body>

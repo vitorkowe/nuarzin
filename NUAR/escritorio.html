@@ -441,7 +441,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
-        // Firebase Configuration - SEU FIREBASE INTEGRADO
         const firebaseConfig = {
             apiKey: "AIzaSyDHlEtmKXGeAsY9Ih-BBP-yiGrKJIKRD9k",
             authDomain: "nuarkowe.firebaseapp.com",
@@ -471,9 +470,10 @@
         let players = {};
         let myId = null;
         let myName = '';
-        let myCharacter = 0;
+        let myCharacter = null;
         let targetPosition = null;
         let chatBubbles = {};
+        let receivedMessages = new Set();
         
         const characterImages = {
             0: { front: null, back: null, left: null, right: null },
@@ -524,48 +524,6 @@
             chairPositions.push({ x: 12 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
             chairPositions.push({ x: 14 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
             chairPositions.push({ x: 16 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
-            
-            chairPositions.push({ x: 10 * TILE_SIZE, y: 19 * TILE_SIZE, direction: 'back' });
-            chairPositions.push({ x: 12 * TILE_SIZE, y: 19 * TILE_SIZE, direction: 'back' });
-            chairPositions.push({ x: 14 * TILE_SIZE, y: 19 * TILE_SIZE, direction: 'back' });
-            chairPositions.push({ x: 16 * TILE_SIZE, y: 19 * TILE_SIZE, direction: 'back' });
-            
-            chairPositions.push({ x: 8 * TILE_SIZE, y: 15 * TILE_SIZE, direction: 'right' });
-            chairPositions.push({ x: 8 * TILE_SIZE, y: 17 * TILE_SIZE, direction: 'right' });
-            
-            chairPositions.push({ x: 17 * TILE_SIZE, y: 15 * TILE_SIZE, direction: 'left' });
-            chairPositions.push({ x: 17 * TILE_SIZE, y: 17 * TILE_SIZE, direction: 'left' });
-            
-            chairPositions.push({ x: 29 * TILE_SIZE, y: 14 * TILE_SIZE, direction: 'front' });
-            chairPositions.push({ x: 31 * TILE_SIZE, y: 14 * TILE_SIZE, direction: 'front' });
-            chairPositions.push({ x: 33 * TILE_SIZE, y: 14 * TILE_SIZE, direction: 'front' });
-            chairPositions.push({ x: 35 * TILE_SIZE, y: 14 * TILE_SIZE, direction: 'front' });
-            
-            collisionMap[16][15] = 1;
-            collisionMap[15][25] = 1;
-            
-            for (let y = 13; y < 16; y++) {
-                for (let x = 28; x < 37; x++) {
-                    collisionMap[y][x] = 1;
-                }
-            }
-            
-            for (let y = 16; y < 19; y++) {
-                for (let x = 30; x < 35; x++) {
-                    collisionMap[y][x] = 1;
-                }
-            }
-            
-            collisionMap[18][28] = 1;
-            collisionMap[18][29] = 1;
-            collisionMap[18][36] = 1;
-            collisionMap[18][37] = 1;
-            
-            chairPositions.push({ x: 28 * TILE_SIZE, y: 17 * TILE_SIZE, direction: 'front' });
-            chairPositions.push({ x: 36 * TILE_SIZE, y: 17 * TILE_SIZE, direction: 'front' });
-            
-            collisionMap[13][39] = 1;
-            collisionMap[14][39] = 1;
         }
 
         setupCollisions();
@@ -573,7 +531,7 @@
         const emojiPanel = document.getElementById('emojiPanel');
         const emojiToggle = document.getElementById('emojiToggle');
         
-        emojiText.forEach((emoji, idx) => {
+        emojiText.forEach((emoji) => {
             const btn = document.createElement('button');
             btn.className = 'emoji-btn';
             btn.textContent = emoji;
@@ -695,8 +653,7 @@
                 canvas.height = mapImage.height;
                 imagesLoaded++;
             };
-            mapImage.onerror = (e) => {
-                console.error('Map image failed to load:', e);
+            mapImage.onerror = () => {
                 canvas.width = 1316;
                 canvas.height = 624;
                 const tempCanvas = document.createElement('canvas');
@@ -706,69 +663,6 @@
                 
                 tempCtx.fillStyle = '#c5cad6';
                 tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                
-                tempCtx.fillStyle = '#b0b8c8';
-                tempCtx.fillRect(0, 0, tempCanvas.width, 250);
-                
-                tempCtx.fillStyle = '#8090a0';
-                tempCtx.fillRect(50, 50, 150, 150);
-                tempCtx.fillStyle = '#9098a8';
-                tempCtx.fillRect(65, 65, 60, 120);
-                tempCtx.fillRect(135, 65, 60, 120);
-                
-                tempCtx.fillStyle = '#7080a0';
-                tempCtx.fillRect(350, 50, 200, 150);
-                for (let i = 0; i < 3; i++) {
-                    tempCtx.fillStyle = '#5060a0';
-                    tempCtx.fillRect(360, 60 + i * 45, 180, 35);
-                    for (let j = 0; j < 8; j++) {
-                        const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a8e6cf', '#ff8b94'];
-                        tempCtx.fillStyle = colors[j % colors.length];
-                        tempCtx.fillRect(365 + j * 22, 65 + i * 45, 18, 25);
-                    }
-                }
-                
-                tempCtx.fillStyle = '#a0e0ff';
-                tempCtx.fillRect(950, 50, 180, 150);
-                tempCtx.fillRect(1150, 50, 180, 150);
-                tempCtx.strokeStyle = '#708090';
-                tempCtx.lineWidth = 8;
-                tempCtx.strokeRect(950, 50, 180, 150);
-                tempCtx.strokeRect(1150, 50, 180, 150);
-                
-                tempCtx.fillStyle = '#d0d8e0';
-                tempCtx.fillRect(300, 450, 250, 150);
-                tempCtx.fillStyle = '#90b8d0';
-                tempCtx.fillRect(310, 460, 230, 130);
-                
-                tempCtx.fillStyle = '#4080c0';
-                [280, 570].forEach(x => {
-                    [430, 480, 530].forEach(y => {
-                        tempCtx.fillRect(x, y, 40, 40);
-                    });
-                });
-                [330, 380, 430, 480].forEach(x => {
-                    tempCtx.fillRect(x, 410, 40, 40);
-                    tempCtx.fillRect(x, 610, 40, 40);
-                });
-                
-                tempCtx.fillStyle = '#90a0b0';
-                tempCtx.fillRect(900, 420, 280, 100);
-                tempCtx.fillStyle = '#a8b8c8';
-                tempCtx.fillRect(910, 430, 260, 80);
-                
-                tempCtx.fillStyle = '#c8a060';
-                tempCtx.fillRect(950, 540, 180, 80);
-                
-                tempCtx.fillStyle = '#8B4513';
-                [600, 800, 1250].forEach(x => {
-                    tempCtx.fillRect(x, 220, 40, 50);
-                    tempCtx.fillStyle = '#2d5016';
-                    tempCtx.beginPath();
-                    tempCtx.arc(x + 20, 210, 35, 0, Math.PI * 2);
-                    tempCtx.fill();
-                    tempCtx.fillStyle = '#8B4513';
-                });
                 
                 mapImage.src = tempCanvas.toDataURL();
                 imagesLoaded++;
@@ -789,7 +683,7 @@
         });
 
         function updateJoinButton() {
-            joinButton.disabled = !(nameInput.value.trim() && myCharacter !== null && myCharacter !== undefined);
+            joinButton.disabled = !(nameInput.value.trim() && myCharacter !== null);
         }
 
         joinButton.addEventListener('click', joinGame);
@@ -815,40 +709,41 @@
             
             if (playersRef) {
                 playersRef.child(myId).set(players[myId]);
-                
                 playersRef.child(myId).onDisconnect().remove();
                 
-                playersRef.on('child_added', (snapshot) => {
-                    const playerId = snapshot.key;
-                    if (playerId !== myId) {
-                        players[playerId] = snapshot.val();
-                        updatePlayersList();
-                    }
-                });
-                
-                playersRef.on('child_changed', (snapshot) => {
-                    const playerId = snapshot.key;
-                    if (playerId !== myId) {
-                        players[playerId] = snapshot.val();
-                    }
-                });
-                
-                playersRef.on('child_removed', (snapshot) => {
-                    const playerId = snapshot.key;
-                    if (playerId !== myId) {
-                        const playerName = players[playerId]?.name;
-                        delete players[playerId];
-                        updatePlayersList();
-                        if (playerName) {
-                            addSystemMessage(`${playerName} saiu do escritório`);
+                playersRef.on('value', (snapshot) => {
+                    const allPlayers = snapshot.val() || {};
+                    
+                    Object.keys(allPlayers).forEach(id => {
+                        if (id !== myId) {
+                            players[id] = allPlayers[id];
                         }
-                    }
+                    });
+                    
+                    Object.keys(players).forEach(id => {
+                        if (id !== myId && !allPlayers[id]) {
+                            delete players[id];
+                        }
+                    });
+                    
+                    updatePlayersList();
                 });
                 
                 messagesRef.limitToLast(50).on('child_added', (snapshot) => {
-                    const msg = snapshot.val();
-                    if (msg.playerId !== myId) {
-                        addChatMessage(msg.name, msg.text, msg.character, msg.time, false);
+                    const msgKey = snapshot.key;
+                    if (!receivedMessages.has(msgKey)) {
+                        receivedMessages.add(msgKey);
+                        const msg = snapshot.val();
+                        
+                        if (msg.playerId !== myId) {
+                            addChatMessage(msg.name, msg.text, msg.character, msg.time, false);
+                        }
+                        
+                        chatBubbles[msg.playerId] = {
+                            text: msg.text,
+                            timestamp: Date.now(),
+                            opacity: 1
+                        };
                     }
                 });
             }
@@ -903,7 +798,8 @@
             };
             
             if (messagesRef) {
-                messagesRef.push(messageData);
+                const newMsgRef = messagesRef.push(messageData);
+                receivedMessages.add(newMsgRef.key);
             }
             
             addChatMessage(myName, text, myCharacter, time, true);

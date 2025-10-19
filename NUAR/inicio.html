@@ -4818,6 +4818,9 @@ window.showSeason = function(season, itemId) {
                                          selectedContentType === 'series' ? 'Série' :
                                          selectedContentType === 'animes' ? 'Anime' : 'Animação';
                             showToast(`${tipo} "${itemData.title}" adicionado com sucesso`);
+                            
+                            // ✅ VERIFICAR CONQUISTA DE PRIMEIRA CONTRIBUIÇÃO
+                            checkFirstContentAchievement();
                         })
                         .catch((error) => {
                             console.error('❌ Erro ao adicionar:', error);
@@ -5453,9 +5456,6 @@ function openModalFromSearch(itemId) {
     document.querySelector('.search-container').classList.remove('active');
     openModal(itemId);
 }
-
-
-
     </script>
 </body>
 </html>

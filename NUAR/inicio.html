@@ -3054,6 +3054,17 @@ let episodesPerSeason = {}; // Armazena quantidade de episódios por temporada
             console.error('Firebase SDK não foi carregado');
         }
 
+        const ADMIN_EMAILS = [
+            'kowe@gmail.com',
+            'fontolanmariaeduarda11@gmail.com',
+            'fmatheusds2016@gmail.com'
+        ];
+
+        function isAdminUser(email) {
+            return ADMIN_EMAILS.includes(email);
+        }
+
+
         let userFavorites = new Set();
         let selectedFile = null;
         let adminGenres = [];
@@ -3118,7 +3129,7 @@ function ensureAchievementContainer() {
 
 function checkFirstContentAchievement() {
     const adminUser = auth.currentUser;
-    if (!adminUser || adminUser.email !== 'kowe@gmail.com') return;
+    if (!adminUser || !isAdminUser(adminUser.email)) return;
     
     const achievementKey = 'first_content_added';
     if (hasAchievement(achievementKey)) return;
@@ -4177,7 +4188,7 @@ window.showSeason = function(season, itemId) {
 
         function renderMovies() {
     const adminUser = auth.currentUser;
-    const isAdmin = adminUser && adminUser.email === 'kowe@gmail.com';
+    const isAdmin = adminUser && isAdminUser(adminUser.email);
     
     const moviesGrid = document.getElementById('moviesGrid');
     const seriesGrid = document.getElementById('seriesGrid');
@@ -4331,7 +4342,7 @@ window.showSeason = function(season, itemId) {
 
         function createMovieCard(m, type) {
     const adminUser = auth.currentUser;
-    const isAdmin = adminUser && adminUser.email === 'kowe@gmail.com';
+    const isAdmin = adminUser && isAdminUser(adminUser.email);
     const genresText = m.genres.join(' • ');
     const itemId = m.firebaseKey || m.id;
     const isFavorited = userFavorites.has(itemId);
@@ -4396,7 +4407,7 @@ window.showSeason = function(season, itemId) {
 
         function createMovieCardWithProgress(m, type, progress) {
             const adminUser = auth.currentUser;
-            const isAdmin = adminUser && adminUser.email === 'kowe@gmail.com';
+            const isAdmin = adminUser && isAdminUser(adminUser.email);
             const genresText = m.genres.join(' • ');
             const itemId = m.firebaseKey || m.id;
             
@@ -4664,7 +4675,7 @@ window.showSeason = function(season, itemId) {
                 try {
                     const userCredential = await auth.signInWithEmailAndPassword(email, password);
                     
-                    if (userCredential.user.email === 'kowe@gmail.com') {
+                    if (isAdminUser(userCredential.user.email)) {
                         console.log('✅ Admin autenticado:', userCredential.user.email);
                         loginModal.classList.remove('active');
                         contentModal.classList.add('active');
@@ -5299,7 +5310,7 @@ function applyMovieFilters() {
 
 function renderMoviesWithFilters() {
     const adminUser = auth.currentUser;
-    const isAdmin = adminUser && adminUser.email === 'kowe@gmail.com';
+    const isAdmin = adminUser && isAdminUser(adminUser.email);
     
     filterElements.moviesGrid.innerHTML = '';
 
@@ -5456,6 +5467,7 @@ function openModalFromSearch(itemId) {
     document.querySelector('.search-container').classList.remove('active');
     openModal(itemId);
 }
+
     </script>
 </body>
 </html>

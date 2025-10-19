@@ -5312,35 +5312,6 @@ function renderMoviesWithFilters() {
     }
 }
 
-function createMovieCard(m, type) {
-    const itemId = m.firebaseKey || m.id;
-    const isFavorited = userFavorites.has(itemId);
-    const progress = watchingProgress[itemId];
-    const progressPercent = progress ? Math.round(progress.progress) : 0;
-    
-    return `
-        <div class="movie-card" onclick="openModal('${itemId}')">
-            <div class="movie-poster">
-                <img src="${m.imageUrl}" alt="${m.title}">
-                <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" onclick="toggleFavorite(event, '${itemId}')">
-                    <svg viewBox="0 0 24 24" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
-                </button>
-                ${progressPercent > 0 ? `<div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%"></div></div>` : ''}
-                <div class="play-icon"></div>
-            </div>
-            <div class="movie-info">
-                <div class="movie-title">${m.title}</div>
-                <div class="movie-meta">
-                    <span>${m.year}</span>
-                    <span>⭐ ${m.rating}</span>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
 function initializeSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchOverlay = document.getElementById('searchOverlay');
@@ -5482,6 +5453,8 @@ function openModalFromSearch(itemId) {
     document.querySelector('.search-container').classList.remove('active');
     openModal(itemId);
 }
+
+
 
     </script>
 </body>

@@ -418,10 +418,11 @@
         }
 
         .achievement-rarity.lendario {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
-            border-color: rgba(255, 215, 0, 0.6);
-            color: #ffd700;
-        }
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
+    border-color: rgba(255, 215, 0, 0.6);
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
 
         .achievement-rarity.epico {
             background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(124, 53, 236, 0.3));
@@ -612,7 +613,9 @@
             <button class="filter-tab active" data-filter="all">Todas</button>
             <button class="filter-tab" data-filter="movie">Filmes</button>
             <button class="filter-tab" data-filter="season">Temporadas</button>
+            <button class="filter-tab" data-filter="special">Especiais</button>
             <button class="filter-tab" data-filter="complete">Completos</button>
+            
         </div>
 
         <div class="achievements-grid" id="achievementsGrid">
@@ -719,25 +722,42 @@
             let seasonsCount = 0;
             let seriesCount = 0;
             
+            
+      
             Object.keys(achievementsUnlocked).forEach(key => {
-                if (key.startsWith('movie_')) {
-                    const itemId = key.replace('movie_', '');
-                    const item = allContent.find(m => (m.firebaseKey || m.id) === itemId);
-                    if (item) {
-                        achievementsList.push({
-                            icon: '',
-                            title: item.title,
-                            description: `Parabéns por terminar ${item.title}! Você assistiu o filme completo e desbloqueou esta conquista épica.`,
-                            rarity: 'Épico',
-                            rarityClass: 'epico',
-                            type: 'movie',
-                            unlocked: true,
-                            poster: item.imageUrl,
-                            date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
-                        });
-                        moviesCount++;
-                    }
-                }
+    // Conquista especial: Apoiador
+    if (key === 'first_content_added') {
+        achievementsList.push({
+            icon: '🏆',
+            title: 'Apoiador',
+            description: 'Obrigado por ajudar o Nuar a crescer, você faz parte disso! Você adicionou seu primeiro conteúdo à plataforma.',
+            rarity: 'Mítico',
+            rarityClass: 'lendario',
+            type: 'special',
+            unlocked: true,
+            poster: 'https://i.ibb.co/DDyKRKY6/nuarrr.png',
+            date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+        });
+    }
+    
+    if (key.startsWith('movie_')) {
+        const itemId = key.replace('movie_', '');
+        const item = allContent.find(m => (m.firebaseKey || m.id) === itemId);
+        if (item) {
+            achievementsList.push({
+                icon: '',
+                title: item.title,
+                description: `Parabéns por terminar ${item.title}! Você assistiu o filme completo e desbloqueou esta conquista épica.`,
+                rarity: 'Épico',
+                rarityClass: 'epico',
+                type: 'movie',
+                unlocked: true,
+                poster: item.imageUrl,
+                date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+            });
+            moviesCount++;
+        }
+    }
                 
                 if (key.startsWith('season_')) {
                     const match = key.match(/season_(.+)_S(\d+)/);

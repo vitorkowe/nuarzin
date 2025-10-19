@@ -17,6 +17,152 @@
     
     <style>
 
+/* BOTÃO NBLOCK */
+.btn-nblock-container {
+    position: relative;
+}
+
+.btn-adblocker {
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #5c45af, #7c35ec);
+    border: none;
+    border-radius: 25px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 15px rgba(92, 69, 175, 0.4);
+    white-space: nowrap;
+}
+
+.btn-adblocker:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(124, 53, 236, 0.6);
+    background: linear-gradient(135deg, #6b52c9, #8d45ff);
+}
+
+/* NBLOCK POPUP */
+.nblock-popup {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    background: rgba(17, 14, 37, 0.98);
+    border: 2px solid rgba(128, 99, 231, 0.5);
+    border-radius: 16px;
+    padding: 20px;
+    min-width: 320px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 10003;
+}
+
+.nblock-popup.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.nblock-popup::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid rgba(128, 99, 231, 0.5);
+}
+
+.nblock-popup-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nblock-popup-subtitle {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 18px;
+    line-height: 1.5;
+}
+
+.nblock-extensions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nblock-extension-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(128, 99, 231, 0.15);
+    border: 2px solid rgba(128, 99, 231, 0.4);
+    border-radius: 12px;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.nblock-extension-btn:hover {
+    background: rgba(128, 99, 231, 0.25);
+    border-color: rgba(128, 99, 231, 0.7);
+    transform: translateX(5px);
+}
+
+.nblock-extension-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #5c45af, #7c35ec);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px;
+}
+
+.nblock-extension-info {
+    flex: 1;
+}
+
+.nblock-extension-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.nblock-extension-desc {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.nblock-arrow {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.4);
+    transition: all 0.3s;
+}
+
+.nblock-extension-btn:hover .nblock-arrow {
+    color: #fff;
+    transform: translateX(3px);
+}
+
 body {
     zoom: 0.9;
 }
@@ -713,27 +859,6 @@ body {
             gap: 15px;
         }
 
-        .btn-adblocker {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #5c45af, #7c35ec);
-            border: none;
-            border-radius: 25px;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 15px rgba(92, 69, 175, 0.4);
-        }
-
-        .btn-adblocker:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 25px rgba(124, 53, 236, 0.6);
-            background: linear-gradient(135deg, #6b52c9, #8d45ff);
-        }
 
         .user-info {
             display: flex;
@@ -2776,6 +2901,41 @@ body {
                     </svg>
                 </button>
                 <input type="text" class="search-bar" placeholder="Buscar..." id="searchInput">
+                <!-- BOTÃO NBLOCK -->
+<div class="btn-nblock-container">
+    <button class="btn-adblocker" id="nblockBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+        </svg>
+        <span>NBlock</span>
+    </button>
+    
+    <div class="nblock-popup" id="nblockPopup">
+        <div class="nblock-popup-title">Bloqueadores Recomendados</div>
+        <div class="nblock-popup-subtitle">Escolha uma extensão para melhorar sua experiência:</div>
+        <div class="nblock-extensions">
+            <a href="https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm" 
+               target="_blank" class="nblock-extension-btn">
+                <div class="nblock-extension-icon"></div>
+                <div class="nblock-extension-info">
+                    <div class="nblock-extension-name">uBlock Origin</div>
+                    <div class="nblock-extension-desc">Versão completa e poderosa</div>
+                </div>
+                <div class="nblock-arrow">→</div>
+            </a>
+            <a href="https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh" 
+               target="_blank" class="nblock-extension-btn">
+                <div class="nblock-extension-icon"></div>
+                <div class="nblock-extension-info">
+                    <div class="nblock-extension-name">uBlock Origin Lite</div>
+                    <div class="nblock-extension-desc">Versão leve e rápida</div>
+                </div>
+                <div class="nblock-arrow">→</div>
+            </a>
+        </div>
+    </div>
+</div>
                 <div id="authArea"></div>
             </div>
         </div>
@@ -3976,13 +4136,44 @@ window.showSeason = function(season, itemId) {
                 });
             } else {
                 authArea.innerHTML = `
-                    <button class="btn-adblocker" onclick="window.location.href='cadastro'" style="background: linear-gradient(135deg, #5c45af, #7c35ec);">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        Entrar
-                    </button>
+                    <button class="btn-adblocker" id="nblockBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+        </svg>
+        NBlock
+    </button>
+    <div class="nblock-popup" id="nblockPopup">
+        <div class="nblock-popup-title">
+            🛡️ Bloqueadores Recomendados
+        </div>
+        <div class="nblock-popup-subtitle">
+            Escolha uma das extensões abaixo para melhorar sua experiência:
+        </div>
+        <div class="nblock-extensions">
+            <a href="https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm" 
+               target="_blank" 
+               class="nblock-extension-btn">
+                <div class="nblock-extension-icon">🚀</div>
+                <div class="nblock-extension-info">
+                    <div class="nblock-extension-name">uBlock Origin</div>
+                    <div class="nblock-extension-desc">Versão completa e poderosa</div>
+                </div>
+                <div class="nblock-arrow">→</div>
+            </a>
+            <a href="https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh" 
+               target="_blank" 
+               class="nblock-extension-btn">
+                <div class="nblock-extension-icon">⚡</div>
+                <div class="nblock-extension-info">
+                    <div class="nblock-extension-name">uBlock Origin Lite</div>
+                    <div class="nblock-extension-desc">Versão leve e rápida</div>
+                </div>
+                <div class="nblock-arrow">→</div>
+            </a>
+        </div>
+    </div>
+</div>
                 `;
             }
         }
@@ -4788,33 +4979,43 @@ window.showSeason = function(season, itemId) {
                     
                     if (editType !== selectedContentType) {
                         deleteContentFromFirebase(editType, oldItem.firebaseKey)
-                            .then(() => saveContentToFirebase(selectedContentType, itemData))
-                            .then(() => {
-                                contentModal.classList.remove('active');
-                                resetAdminForm();
-                                const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
-                                                selectedContentType === 'series' ? 'Série' :
-                                                selectedContentType === 'animes' ? 'Anime' : 'Animação';
-                                showToast(`Conteúdo movido para ${tipoNome}s com sucesso`);
-                            })
-                            .catch((error) => {
-                                console.error('❌ Erro ao mover:', error);
-                                alert(`Erro: ${error.message}`);
-                            });
+    .then(() => saveContentToFirebase(selectedContentType, itemData))
+    .then(() => {
+        contentModal.classList.remove('active');
+        resetAdminForm();
+        const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
+                        selectedContentType === 'series' ? 'Série' :
+                        selectedContentType === 'animes' ? 'Anime' : 'Animação';
+        showToast(`Conteúdo movido para ${tipoNome}s com sucesso`);
+        
+        // ✅ MANTER ADMIN LOGADO E RENDERIZAR COM CONTROLES
+        setTimeout(() => {
+            renderMovies();
+        }, 300);
+    })
+    .catch((error) => {
+        console.error('❌ Erro ao mover:', error);
+        alert(`Erro: ${error.message}`);
+    });
                     } else {
                         updateContentInFirebase(selectedContentType, oldItem.firebaseKey, itemData)
-                            .then(() => {
-                                contentModal.classList.remove('active');
-                                resetAdminForm();
-                                const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
-                                                selectedContentType === 'series' ? 'Série' : 
-                                                selectedContentType === 'animes' ? 'Anime' : 'Animação';
-                                showToast(`${tipoNome} "${itemData.title}" atualizado com sucesso`);
-                            })
-                            .catch((error) => {
-                                console.error('❌ Erro ao atualizar:', error);
-                                alert(`Erro: ${error.message}`);
-                            });
+    .then(() => {
+        contentModal.classList.remove('active');
+        resetAdminForm();
+        const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
+                        selectedContentType === 'series' ? 'Série' : 
+                        selectedContentType === 'animes' ? 'Anime' : 'Animação';
+        showToast(`${tipoNome} "${itemData.title}" atualizado com sucesso`);
+        
+        // ✅ MANTER ADMIN LOGADO E RENDERIZAR COM CONTROLES
+        setTimeout(() => {
+            renderMovies();
+        }, 300);
+    })
+    .catch((error) => {
+        console.error('❌ Erro ao atualizar:', error);
+        alert(`Erro: ${error.message}`);
+    });
                     }
                 } else {
                     const timestamp = Date.now();
@@ -4822,21 +5023,26 @@ window.showSeason = function(season, itemId) {
                     itemData.createdAt = timestamp;
 
                     saveContentToFirebase(selectedContentType, itemData)
-                        .then(() => {
-                            contentModal.classList.remove('active');
-                            resetAdminForm();
-                            const tipo = selectedContentType === 'filmes' ? 'Filme' : 
-                                         selectedContentType === 'series' ? 'Série' :
-                                         selectedContentType === 'animes' ? 'Anime' : 'Animação';
-                            showToast(`${tipo} "${itemData.title}" adicionado com sucesso`);
-                            
-                            // ✅ VERIFICAR CONQUISTA DE PRIMEIRA CONTRIBUIÇÃO
-                            checkFirstContentAchievement();
-                        })
-                        .catch((error) => {
-                            console.error('❌ Erro ao adicionar:', error);
-                            alert(`Erro: ${error.message}`);
-                        });
+    .then(() => {
+        contentModal.classList.remove('active');
+        resetAdminForm();
+        const tipo = selectedContentType === 'filmes' ? 'Filme' : 
+                     selectedContentType === 'series' ? 'Série' :
+                     selectedContentType === 'animes' ? 'Anime' : 'Animação';
+        showToast(`${tipo} "${itemData.title}" adicionado com sucesso`);
+        
+        // ✅ VERIFICAR CONQUISTA DE PRIMEIRA CONTRIBUIÇÃO
+        checkFirstContentAchievement();
+        
+        // ✅ MANTER ADMIN LOGADO E RENDERIZAR COM CONTROLES
+        setTimeout(() => {
+            renderMovies();
+        }, 300);
+    })
+    .catch((error) => {
+        console.error('❌ Erro ao adicionar:', error);
+        alert(`Erro: ${error.message}`);
+    });
                 }
             });
         }
@@ -5144,6 +5350,7 @@ function renderFilteredMovies(type) {
         window.addEventListener('load', async () => {
             initFilters();
             initializeSearch();
+            initNBlockPopup();
             console.log('🚀 Aplicação iniciada');
             console.log('🔐 Verificando autenticação...');
             await checkAuthState();
@@ -5466,6 +5673,33 @@ function openModalFromSearch(itemId) {
     document.getElementById('searchInput').classList.remove('active');
     document.querySelector('.search-container').classList.remove('active');
     openModal(itemId);
+}
+
+// ===== NBLOCK POPUP =====
+function initNBlockPopup() {
+    const nblockBtn = document.getElementById('nblockBtn');
+    const nblockPopup = document.getElementById('nblockPopup');
+    
+    if (!nblockBtn || !nblockPopup) return;
+    
+    nblockBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        nblockPopup.classList.toggle('active');
+    });
+    
+    // Fechar ao clicar fora
+    document.addEventListener('click', (e) => {
+        if (!nblockBtn.contains(e.target) && !nblockPopup.contains(e.target)) {
+            nblockPopup.classList.remove('active');
+        }
+    });
+    
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            nblockPopup.classList.remove('active');
+        }
+    });
 }
 
     </script>

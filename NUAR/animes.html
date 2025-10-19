@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animes - Nuar</title>
+    
+    <!-- Firebase SDK - COLOCAR NO HEAD -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 40px; }
+        .logo img { height: 40px; cursor: pointer; }
+
+        .nav-tabs { display: flex; gap: 15px; }
+
+        .nav-tab {
+            padding: 8px 25px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: rgba(128, 99, 231, 0.5);
+        }
+
+        .nav-tab.active {
+            background: rgba(91, 72, 212, 0.15);
+            border: 2px solid #8063e7;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(91, 72, 212, 0.3);
+        }
+
+        .search-container { display: flex; align-items: center; gap: 15px; }
+
+        .search-input {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: #fff;
+            font-size: 14px;
+            width: 250px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #553ec4;
+            background: rgba(91, 72, 212, 0.2);
+        }
+
+        .search-input::placeholder { color: rgba(255, 255, 255, 0.5); }
+
+        .btn-user {
+            background: linear-gradient(135deg, #5c45af, #7c35ec);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-user:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 53, 236, 0.6);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        .page-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #fff, #8063e7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+        }
+
+        .movie-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .movie-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(124, 53, 236, 0.4);
+            border-color: #7c35ec;
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .movie-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .movie-card:hover .movie-poster img { transform: scale(1.1); }
+
+        .favorite-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.15);
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .favorite-btn svg {
+            width: 22px;
+            height: 22px;
+            stroke: #fff;
+            fill: transparent;
+            transition: all 0.3s;
+        }
+
+        .favorite-btn.favorited svg {
+            fill: #553ec4;
+            stroke: #553ec4;
+        }
+
+        .movie-info { padding: 15px; }
+
+        .movie-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .movie-meta {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .rating { color: #fbbf24; }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            color: #fff;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 600px;
+            background: #000;
+            position: relative;
+        }
+
+        .video-player iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .movie-details { padding: 30px; }
+
+        .movie-details h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .movie-details p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+        }
+
+        .genres {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .genre-tag {
+            background: rgba(124, 53, 236, 0.2);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid rgba(124, 53, 236, 0.5);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(10, 10, 15, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(85, 62, 196, 0.5);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 10000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- VERIFICAÇÃO DE LOGIN -->
+    <script>
+        const loggedUser = localStorage.getItem('nuarLoggedUser');
+        if (!loggedUser) {
+            window.location.href = '/cadastro.html';
+        }
+    </script>
+
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo" onclick="window.location.href='/inicio.html'">
+                    <img src="https://i.ibb.co/DDyKRKY6/nuarrr.png" alt="Nuar">
+                </div>
+                <div class="nav-tabs">
+                    <a href="/inicio.html" class="nav-tab">Início</a>
+                    <a href="/filmes.html" class="nav-tab">Filmes</a>
+                    <a href="/series.html" class="nav-tab">Séries</a>
+                    <a href="/animes.html" class="nav-tab active">Animes</a>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Buscar animes..." id="searchInput">
+                <div id="authArea"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">Animes</h1>
+        <div class="movies-grid" id="moviesGrid">
+            <div class="loading">Carregando animes...</div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal" onclick="if(event.target.id==='modal') closeModal()">
+        <div class="modal-content" style="position: relative;">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div class="video-player" id="videoPlayer"></div>
+            <div class="movie-details" id="movieDetails"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Inicializar Firebase (APENAS UMA VEZ)
+        const firebaseConfig = {
+    apiKey: "AIzaSyDHlEtmKXGeAsY9Ih-BBP-yiGrKJIKRD9k",
+    authDomain: "nuarkowe.firebaseapp.com",
+    databaseURL: "https://nuarkowe-default-rtdb.firebaseio.com",
+    projectId: "nuarkowe",
+    storageBucket: "nuarkowe.firebasestorage.app",
+    messagingSenderId: "1063041816951",
+    appId: "1:1063041816951:web:0ffe4185fd0102b878e972"
+};
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let userFavorites = new Set();
+        let animes = [];
+
+        // Carrega animes do Firebase (TEMPO REAL)
+        function loadAnimes() {
+            console.log('Configurando listener do Firebase para animes...');
+            
+            database.ref('content/animes').on('value', (snapshot) => {
+                const data = snapshot.val();
+                animes = data ? Object.keys(data).map(key => ({
+                    ...data[key],
+                    firebaseKey: key,
+                    id: data[key].id || key
+                })) : [];
+                
+                console.log('Animes atualizados do Firebase:', animes.length);
+                renderMovies();
+            });
+        }
+
+        async function checkAuth() {
+            const loggedUser = localStorage.getItem('nuarLoggedUser');
+            if (loggedUser) {
+                return JSON.parse(loggedUser);
+            }
+            return null;
+        }
+
+        function loadUserFavorites() {
+            const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
+            if (!loggedUser) return;
+
+            const savedFavorites = localStorage.getItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`);
+            if (savedFavorites) {
+                const favArray = JSON.parse(savedFavorites);
+                userFavorites = new Set(favArray);
+                updateFavoriteButtons();
+            }
+        }
+
+        function saveFavorites() {
+            const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
+            if (!loggedUser) return;
+
+            const favArray = Array.from(userFavorites);
+            localStorage.setItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`, JSON.stringify(favArray));
+        }
+
+        function updateFavoriteButtons() {
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                const itemId = btn.dataset.id;
+                if (userFavorites.has(itemId)) {
+                    btn.classList.add('favorited');
+                } else {
+                    btn.classList.remove('favorited');
+                }
+            });
+        }
+
+        async function toggleFavorite(event, itemId) {
+            event.stopPropagation();
+            
+            const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
+            if (!loggedUser) {
+                showToast('Você precisa estar logado para favoritar!');
+                setTimeout(() => window.location.href = '/cadastro.html', 1500);
+                return;
+            }
+
+            const item = animes.find(m => (m.firebaseKey || m.id) == itemId);
+            if (!item) return;
+
+            const btn = event.currentTarget;
+            const isFavorited = userFavorites.has(itemId);
+
+            if (isFavorited) {
+                userFavorites.delete(itemId);
+                btn.classList.remove('favorited');
+                showToast('Removido dos favoritos!');
+            } else {
+                userFavorites.add(itemId);
+                btn.classList.add('favorited');
+                showToast('Adicionado aos favoritos!');
+            }
+
+            saveFavorites();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function updateAuthArea() {
+            const authArea = document.getElementById('authArea');
+            const user = await checkAuth();
+            
+            if (user) {
+                authArea.innerHTML = `<button class="btn-user" onclick="window.location.href='/favoritos.html'">♥ Favoritos</button>`;
+                loadUserFavorites();
+            } else {
+                authArea.innerHTML = `<button class="btn-user" onclick="window.location.href='/cadastro.html'">Entrar</button>`;
+            }
+        }
+
+        function renderMovies(moviesToRender = animes) {
+            const grid = document.getElementById('moviesGrid');
+            
+            if (moviesToRender.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/>
+                            <polyline points="17 2 12 7 7 2"/>
+                        </svg>
+                        <h3>Nenhum anime encontrado</h3>
+                        <p>Adicione animes pelo painel admin ou refine sua busca.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = moviesToRender.map(m => {
+                const itemId = m.firebaseKey || m.id;
+                return `
+                    <div class="movie-card" onclick="openModal('${itemId}')">
+                        <div class="movie-poster">
+                            <img src="${m.imageUrl}" alt="${m.title}">
+                            <button class="favorite-btn ${userFavorites.has(itemId) ? 'favorited' : ''}" 
+                                    data-id="${itemId}" 
+                                    onclick="toggleFavorite(event, '${itemId}')">
+                                <svg viewBox="0 0 24 24" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="movie-info">
+                            <div class="movie-title">${m.title}</div>
+                            <div class="movie-meta">
+                                <span class="rating">⭐ ${m.rating}</span>
+                                <span>${m.year}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openModal(movieId) {
+            const movie = animes.find(m => (m.firebaseKey || m.id) == movieId);
+            if (!movie) return;
+
+            const modal = document.getElementById('modal');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const details = document.getElementById('movieDetails');
+            
+            videoPlayer.innerHTML = `<iframe src="${movie.videoUrl}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+            
+            details.innerHTML = `
+                <h2>${movie.title}</h2>
+                <p><strong>⭐ ${movie.rating}/10</strong> • ${movie.duration}</p>
+                <p>${movie.description}</p>
+                <div class="genres">
+                    ${movie.genres.map(g => `<span class="genre-tag">${g}</span>`).join('')}
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', e => {
+            const term = e.target.value.toLowerCase();
+            const filtered = animes.filter(m => 
+                m.title.toLowerCase().includes(term) || 
+                m.genres.some(g => g.toLowerCase().includes(term))
+            );
+            renderMovies(filtered);
+        });
+
+        window.addEventListener('load', async () => {
+            console.log('Página de animes carregada');
+            loadAnimes(); // Inicia listener do Firebase
+            await updateAuthArea();
+        });
+    </script>
+</body>
+</html>

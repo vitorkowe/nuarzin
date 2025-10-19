@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuar - Streaming de Filmes, Séries e Animes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #110e25, #100c2b, #100a36); color: #fff; min-height: 100vh; overflow-x: hidden; }
+        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 20% 50%, rgba(91, 72, 212, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(128, 99, 231, 0.1) 0%, transparent 50%); pointer-events: none; animation: gradientShift 15s ease infinite; }
+        @keyframes gradientShift { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .header { position: fixed; top: 0; width: 100%; padding: 20px 60px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .logo { display: flex; align-items: center; cursor: pointer; transition: all 0.3s; }
+        .logo img { height: 45px; filter: drop-shadow(0 0 10px rgba(91, 72, 212, 0.5)); transition: all 0.3s; }
+        .logo:hover img { filter: drop-shadow(0 0 15px rgba(128, 99, 231, 0.8)); transform: scale(1.05); }
+        .header-right { display: flex; gap: 20px; align-items: center; }
+        .btn-header { padding: 10px 25px; background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 25px; color: #fff; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .btn-header:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(128, 99, 231, 0.5); transform: translateY(-2px); }
+        .btn-login { background: linear-gradient(135deg, #5c45af, #7c35ec); border: none; box-shadow: 0 4px 15px rgba(92, 69, 175, 0.4); }
+        .btn-login:hover { box-shadow: 0 6px 20px rgba(124, 53, 236, 0.6); }
+        .user-info { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: rgba(91, 72, 212, 0.3); border: 2px solid rgba(91, 72, 212, 0.5); border-radius: 25px; transition: all 0.3s; cursor: pointer; user-select: none; }
+        .user-info:hover { background: rgba(91, 72, 212, 0.4); border-color: rgba(128, 99, 231, 0.8); }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #5c45af, #7c35ec); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; overflow: hidden; background-size: cover; background-position: center; }
+        .user-name { font-size: 13px; font-weight: 500; }
+        .user-menu { position: relative; }
+        .dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: rgba(17, 14, 37, 0.95); border: 1px solid rgba(128, 99, 231, 0.3); border-radius: 12px; padding: 8px; min-width: 200px; opacity: 0; visibility: hidden; transform: translateY(-5px); transition: all 0.2s ease; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); z-index: 1001; }
+        .dropdown.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: #fff; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .dropdown-item:hover { background: rgba(128, 99, 231, 0.2); }
+        .dropdown-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .dropdown-divider { height: 1px; background: rgba(128, 99, 231, 0.2); margin: 6px 0; }
+        .dropdown-item.danger:hover { background: rgba(220, 38, 38, 0.2); color: #ef4444; }
+        
+        /* MODAL DE AVATAR */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 2000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: rgba(17, 14, 37, 0.98); border: 1px solid rgba(128, 99, 231, 0.3); border-radius: 16px; padding: 35px; max-width: 480px; width: 90%; backdrop-filter: blur(10px); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7); }
+        .modal-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+        .upload-area { border: 2px dashed rgba(128, 99, 231, 0.5); border-radius: 12px; padding: 35px 20px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 20px; background: rgba(128, 99, 231, 0.05); }
+        .upload-area:hover { border-color: rgba(128, 99, 231, 0.8); background: rgba(128, 99, 231, 0.1); }
+        .upload-area.dragover { border-color: rgba(128, 99, 231, 1); background: rgba(128, 99, 231, 0.15); transform: scale(1.02); }
+        .upload-icon { margin-bottom: 10px; }
+        .upload-text { font-size: 13px; color: rgba(255, 255, 255, 0.7); }
+        .upload-input { display: none; }
+        .preview-container { margin-bottom: 20px; text-align: center; display: none; }
+        .preview-container.show { display: block; }
+        .preview-image { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin: 0 auto 12px; border: 3px solid rgba(128, 99, 231, 0.6); }
+        .modal-buttons { display: flex; gap: 10px; }
+        .modal-btn { flex: 1; padding: 11px 18px; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s; border: none; }
+        .modal-btn-primary { background: linear-gradient(135deg, #5c45af, #7c35ec); color: #fff; }
+        .modal-btn-primary:hover:not(:disabled) { box-shadow: 0 4px 15px rgba(124, 53, 236, 0.4); }
+        .modal-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .modal-btn-secondary { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; }
+        .modal-btn-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+        
+        .confirm-modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z-index: 2001; align-items: center; justify-content: center; }
+        .confirm-modal.active { display: flex; }
+        .confirm-modal-content { background: rgba(17, 14, 37, 0.98); border: 1px solid rgba(128, 99, 231, 0.3); border-radius: 16px; padding: 35px; max-width: 420px; width: 90%; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7); animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .confirm-modal-icon { width: 70px; height: 70px; margin: 0 auto 20px; background: rgba(239, 68, 68, 0.15); border: 2px solid rgba(239, 68, 68, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .confirm-modal-icon svg { width: 32px; height: 32px; stroke: #ef4444; }
+        .confirm-modal-title { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+        .confirm-modal-text { font-size: 14px; color: rgba(255, 255, 255, 0.7); line-height: 1.6; margin-bottom: 28px; }
+        .confirm-modal-buttons { display: flex; gap: 12px; }
+        .confirm-modal-btn { flex: 1; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; border: none; }
+        .confirm-modal-btn-cancel { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; }
+        .confirm-modal-btn-cancel:hover { background: rgba(255, 255, 255, 0.12); }
+        .confirm-modal-btn-confirm { background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3); }
+        .confirm-modal-btn-confirm:hover { box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5); transform: translateY(-1px); }
+        
+        .toast { position: fixed; bottom: 30px; right: 30px; background: rgba(10, 10, 15, 0.98); backdrop-filter: blur(20px); border: 1px solid rgba(85, 62, 196, 0.5); color: #fff; padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 10000; display: flex; align-items: center; gap: 12px; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        
+        .color-bubble { position: fixed; bottom: 30px; right: 30px; z-index: 100; }
+        .bubble-trigger { width: 65px; height: 65px; border-radius: 50%; background: linear-gradient(135deg, #5c45af, #7c35ec); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8px 30px rgba(92, 69, 175, 0.5); transition: all 0.3s ease; border: 2px solid rgba(255, 255, 255, 0.1); }
+        .bubble-trigger:hover { transform: scale(1.1) rotate(5deg); box-shadow: 0 12px 40px rgba(124, 53, 236, 0.7); }
+        .bubble-trigger svg { width: 28px; height: 28px; stroke: white; animation: sparkle 2s ease-in-out infinite; }
+        @keyframes sparkle { 0%, 100% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.1); } }
+        .bubble-content { position: absolute; bottom: 80px; right: 0; background: rgba(17, 14, 37, 0.98); backdrop-filter: blur(20px); border: 1px solid rgba(128, 99, 231, 0.4); border-radius: 20px; padding: 25px; min-width: 320px; opacity: 0; visibility: hidden; transform: translateY(10px) scale(0.95); transition: all 0.3s ease; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8); }
+        .bubble-content.active { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        .bubble-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .bubble-title svg { width: 20px; height: 20px; }
+        .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .color-item { text-align: center; transition: all 0.3s ease; cursor: pointer; padding: 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .color-item:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(128, 99, 231, 0.3); transform: translateY(-3px); }
+        .color-swatch { width: 60px; height: 60px; border-radius: 12px; margin: 0 auto 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); border: 2px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; cursor: pointer; position: relative; overflow: hidden; }
+        .color-swatch::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%); transform: rotate(45deg); transition: all 0.6s ease; }
+        .color-item:hover .color-swatch::before { left: 100%; }
+        .color-item:hover .color-swatch { transform: scale(1.1); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5); }
+        .color-hex { font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.9); font-family: 'Courier New', monospace; margin-bottom: 3px; }
+        .color-name { font-size: 10px; color: rgba(255, 255, 255, 0.5); font-weight: 500; }
+        .bubble-footer { padding-top: 15px; border-top: 1px solid rgba(128, 99, 231, 0.2); font-size: 11px; color: rgba(255, 255, 255, 0.4); text-align: center; }
+        .copy-notification { position: fixed; bottom: 120px; right: 30px; background: rgba(17, 14, 37, 0.98); border: 1px solid rgba(128, 99, 231, 0.4); border-radius: 12px; padding: 12px 20px; color: #fff; font-size: 13px; font-weight: 600; opacity: 0; visibility: hidden; transform: translateY(10px); transition: all 0.3s ease; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); z-index: 101; display: flex; align-items: center; gap: 8px; }
+        .copy-notification.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .copy-notification svg { width: 16px; height: 16px; stroke: #10b981; }
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 0 60px; padding-top: 80px; }
+        .hero-content { text-align: center; max-width: 900px; z-index: 2; }
+        .hero-title { font-size: 80px; font-weight: 900; margin-bottom: 20px; background: linear-gradient(135deg, #fff 0%, #8063e7 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; }
+        .hero-subtitle { font-size: 24px; color: rgba(255, 255, 255, 0.8); margin-bottom: 15px; }
+        .hero-description { font-size: 16px; color: rgba(255, 255, 255, 0.6); margin-bottom: 40px; line-height: 1.6; }
+        .hero-buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .btn-hero { padding: 16px 40px; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #5c45af, #7c35ec); color: #fff; box-shadow: 0 8px 25px rgba(92, 69, 175, 0.4); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(124, 53, 236, 0.6); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2); color: #fff; }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(128, 99, 231, 0.5); transform: translateY(-3px); }
+        .features { padding: 100px 60px; background: rgba(0, 0, 0, 0.2); }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; max-width: 1400px; margin: 0 auto; }
+        .feature-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 40px; text-align: center; transition: all 0.4s ease; cursor: pointer; }
+        .feature-card:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(128, 99, 231, 0.3); transform: translateY(-10px); box-shadow: 0 15px 40px rgba(91, 72, 212, 0.2); }
+        .feature-icon { width: 80px; height: 80px; background: linear-gradient(135deg, #5c45af, #7c35ec); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; box-shadow: 0 10px 30px rgba(92, 69, 175, 0.4); }
+        .feature-icon svg { width: 35px; height: 35px; }
+        .feature-title { font-size: 22px; font-weight: 600; margin-bottom: 15px; }
+        .feature-description { color: rgba(255, 255, 255, 0.7); line-height: 1.6; font-size: 14px; }
+        .footer { padding: 40px 60px; background: rgba(0, 0, 0, 0.5); text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+        .footer-text { color: rgba(255, 255, 255, 0.5); font-size: 14px; }
+        @media (max-width: 768px) {
+            .header { padding: 15px 30px; }
+            .hero { padding: 0 30px; }
+            .hero-title { font-size: 48px; }
+            .features { padding: 60px 30px; }
+            .color-bubble { bottom: 20px; right: 20px; }
+            .bubble-trigger { width: 55px; height: 55px; }
+            .bubble-content { min-width: 280px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo" onclick="window.location.href='/'"><img src="https://i.ibb.co/DDyKRKY6/nuarrr.png" alt="Nuar"></div>
+        <div class="header-right"><div id="authArea"></div></div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Bem-vindo ao Nuar</h1>
+            <p class="hero-subtitle">Sua plataforma de streaming completa</p>
+            <p class="hero-description">Assista milhares de filmes, séries e animes em alta qualidade. Sem anúncios, sem interrupções. Apenas entretenimento puro.</p>
+            <div class="hero-buttons">
+                <button id="startWatchingBtn" class="btn-hero btn-primary"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Começar a Assistir</button>
+                <a href="#features" class="btn-hero btn-secondary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Explorar Conteúdo</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg></div>
+                <h3 class="feature-title">Catálogo Completo</h3>
+                <p class="feature-description">Milhares de filmes, séries e animes disponíveis para você assistir quando quiser.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+                <h3 class="feature-title">Streaming Rápido</h3>
+                <p class="feature-description">Qualidade HD com carregamento ultrarrápido para uma experiência sem travamentos.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <h3 class="feature-title">Lista de Favoritos</h3>
+                <p class="feature-description">Salve seus conteúdos favoritos e acesse-os facilmente a qualquer momento.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer"><p class="footer-text">© 2025 Nuar. Todos os direitos reservados.</p></footer>
+
+    <!-- MODAL DE AVATAR -->
+    <div class="modal" id="avatarModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Escolher Avatar</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                </div>
+                <div class="upload-text">Clique ou arraste uma imagem</div>
+                <div class="upload-text" style="font-size: 11px; margin-top: 5px; color: rgba(255, 255, 255, 0.5);">JPG, PNG ou GIF (máx. 5MB)</div>
+            </div>
+            <input type="file" id="uploadInput" class="upload-input" accept="image/jpeg,image/png,image/gif">
+            <div class="preview-container" id="previewContainer">
+                <img id="previewImage" class="preview-image" alt="Preview">
+                <div style="font-size: 11px; color: rgba(255, 255, 255, 0.6);">Pré-visualização</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" id="closeModalBtn">Cancelar</button>
+                <button class="modal-btn modal-btn-primary" id="confirmAvatarBtn" disabled>Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <div class="color-bubble">
+        <div class="bubble-trigger" id="bubbleTrigger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+        </div>
+        <div class="bubble-content" id="bubbleContent">
+            <div class="bubble-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                Paleta de Cores Nuar
+            </div>
+            <div class="color-grid">
+                <div class="color-item" data-color="#5c45af">
+                    <div class="color-swatch" style="background: #5c45af;"></div>
+                    <div class="color-hex">#5c45af</div>
+                    <div class="color-name">Purple Deep</div>
+                </div>
+                <div class="color-item" data-color="#7c35ec">
+                    <div class="color-swatch" style="background: #7c35ec;"></div>
+                    <div class="color-hex">#7c35ec</div>
+                    <div class="color-name">Violet Bright</div>
+                </div>
+                <div class="color-item" data-color="#8063e7">
+                    <div class="color-swatch" style="background: #8063e7;"></div>
+                    <div class="color-hex">#8063e7</div>
+                    <div class="color-name">Lavender Glow</div>
+                </div>
+                <div class="color-item" data-color="#110e25">
+                    <div class="color-swatch" style="background: #110e25;"></div>
+                    <div class="color-hex">#110e25</div>
+                    <div class="color-name">Dark Space</div>
+                </div>
+                <div class="color-item" data-color="#100c2b">
+                    <div class="color-swatch" style="background: #100c2b;"></div>
+                    <div class="color-hex">#100c2b</div>
+                    <div class="color-name">Midnight Blue</div>
+                </div>
+                <div class="color-item" data-color="#100a36">
+                    <div class="color-swatch" style="background: #100a36;"></div>
+                    <div class="color-hex">#100a36</div>
+                    <div class="color-name">Deep Navy</div>
+                </div>
+            </div>
+            <div class="bubble-footer">Clique em uma cor para copiar o código hex</div>
+        </div>
+    </div>
+
+    <div class="copy-notification" id="copyNotification">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Cor copiada!
+    </div>
+
+    <div class="confirm-modal" id="confirmLogoutModal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+            <h3 class="confirm-modal-title">Sair da conta?</h3>
+            <p class="confirm-modal-text">Você tem certeza que deseja sair? Seus favoritos estarão salvos quando você voltar.</p>
+            <div class="confirm-modal-buttons">
+                <button class="confirm-modal-btn confirm-modal-btn-cancel" id="cancelLogout">Cancelar</button>
+                <button class="confirm-modal-btn confirm-modal-btn-confirm" id="confirmLogout">Sim, sair</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Config
+        let database = null;
+        
+        // Inicializar Firebase apenas se estiver disponível
+        if (typeof firebase !== 'undefined') {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDhlEtmKXGeAsY9Ih-BBP-y1GrKJIKRD9k",
+                authDomain: "nuarkowe.firebaseapp.com",
+                databaseURL: "https://nuarkowe-default-rtdb.firebaseio.com",
+                projectId: "nuarkowe",
+                storageBucket: "nuarkowe.firebasestorage.app",
+                messagingSenderId: "106304181695",
+                appId: "1:106304181695:web:8ffe4185fd8102b878e972"
+            };
+
+            try {
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                console.log('Firebase inicializado com sucesso');
+            } catch (error) {
+                console.error('Erro ao inicializar Firebase:', error);
+            }
+        }
+
+        let selectedFile = null;
+
+        function getInitials(n) {
+            const a = n.trim().split(' ');
+            return a.length === 1 ? a[0].substring(0, 2).toUpperCase() : (a[0][0] + a[a.length - 1][0]).toUpperCase();
+        }
+
+        async function saveAvatarToFirebase(avatarBase64) {
+            const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
+            
+            if (!loggedUser || !loggedUser.uid) {
+                console.error('Usuário não possui UID');
+                return false;
+            }
+            
+            // Se Firebase não estiver disponível, salva apenas no localStorage
+            if (!database) {
+                console.warn('Firebase não disponível, salvando apenas no localStorage');
+                loggedUser.avatar = avatarBase64;
+                localStorage.setItem('nuarLoggedUser', JSON.stringify(loggedUser));
+                return true;
+            }
+            
+            try {
+                await database.ref(`users/${loggedUser.uid}`).update({
+                    avatar: avatarBase64
+                });
+                
+                loggedUser.avatar = avatarBase64;
+                localStorage.setItem('nuarLoggedUser', JSON.stringify(loggedUser));
+                
+                console.log('Avatar salvo no Firebase com sucesso');
+                return true;
+            } catch (error) {
+                console.error('Erro ao salvar avatar no Firebase:', error);
+                return false;
+            }
+        }
+
+        async function loadUserDataFromFirebase() {
+            const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
+            
+            if (!loggedUser || !loggedUser.uid || !database) return;
+            
+            try {
+                const snapshot = await database.ref(`users/${loggedUser.uid}`).once('value');
+                const userData = snapshot.val();
+                
+                if (userData && userData.avatar) {
+                    loggedUser.avatar = userData.avatar;
+                    localStorage.setItem('nuarLoggedUser', JSON.stringify(loggedUser));
+                    
+                    const avatar = document.getElementById('userAvatar');
+                    if (avatar) {
+                        avatar.style.backgroundImage = `url(${userData.avatar})`;
+                        avatar.textContent = '';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do Firebase:', error);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        async function updateAuthArea() {
+            const a = document.getElementById('authArea');
+            const u = localStorage.getItem('nuarLoggedUser');
+            if (u) {
+                const user = JSON.parse(u);
+                const i = getInitials(user.nome || user.username || 'U');
+                a.innerHTML = `<div class="user-menu"><div class="user-info" id="userInfoBtn"><div class="user-avatar" id="userAvatar">${i}</div><span class="user-name">${user.nome || user.username}</span></div><div class="dropdown" id="userDropdown"><div class="dropdown-item" id="favoritosBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><div>Meus Favoritos</div></div><div class="dropdown-divider"></div><div class="dropdown-item" id="changeAvatarBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="12" r="3"/></svg><div>Trocar Ícone</div></div><div class="dropdown-divider"></div><div class="dropdown-item danger" id="logoutBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><div>Sair da Conta</div></div></div></div>`;
+                
+                const av = user.avatar;
+                if (av) {
+                    const el = document.getElementById('userAvatar');
+                    el.style.backgroundImage = `url(${av})`;
+                    el.textContent = '';
+                }
+
+                document.getElementById('userInfoBtn').addEventListener('click', e => {
+                    e.stopPropagation();
+                    document.getElementById('userDropdown').classList.toggle('active');
+                });
+
+                document.getElementById('favoritosBtn').addEventListener('click', () => {
+                    window.location.href = '/favoritos.html';
+                });
+
+                document.getElementById('changeAvatarBtn').addEventListener('click', () => {
+                    document.getElementById('userDropdown').classList.remove('active');
+                    document.getElementById('avatarModal').classList.add('active');
+                });
+
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    document.getElementById('userDropdown').classList.remove('active');
+                    document.getElementById('confirmLogoutModal').classList.add('active');
+                });
+
+                document.addEventListener('click', e => {
+                    if (!a.contains(e.target)) {
+                        document.getElementById('userDropdown').classList.remove('active');
+                    }
+                });
+            } else {
+                a.innerHTML = `<button class="btn-header btn-login" onclick="window.location.href='/cadastro.html'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Entrar</button>`;
+            }
+        }
+
+        function setupModal() {
+            const modal = document.getElementById('avatarModal');
+            const uploadArea = document.getElementById('uploadArea');
+            const uploadInput = document.getElementById('uploadInput');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewImage = document.getElementById('previewImage');
+            const confirmBtn = document.getElementById('confirmAvatarBtn');
+            const closeBtn = document.getElementById('closeModalBtn');
+
+            uploadArea.addEventListener('click', () => uploadInput.click());
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                if (e.dataTransfer.files[0]) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            uploadInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            function handleFile(file) {
+                if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+                    alert('Apenas JPG, PNG ou GIF');
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Arquivo muito grande');
+                    return;
+                }
+
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    previewContainer.classList.add('show');
+                    confirmBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            confirmBtn.addEventListener('click', async () => {
+                if (selectedFile) {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        const avatarData = e.target.result;
+                        
+                        confirmBtn.disabled = true;
+                        const originalText = confirmBtn.textContent;
+                        confirmBtn.textContent = 'Salvando...';
+                        
+                        const success = await saveAvatarToFirebase(avatarData);
+                        
+                        if (success) {
+                            const avatar = document.getElementById('userAvatar');
+                            if (avatar) {
+                                avatar.style.backgroundImage = `url(${avatarData})`;
+                                avatar.textContent = '';
+                            }
+                            modal.classList.remove('active');
+                            resetModal();
+                            showToast('Avatar atualizado com sucesso');
+                        } else {
+                            alert('Erro ao salvar avatar. Tente novamente.');
+                        }
+                        
+                        confirmBtn.disabled = false;
+                        confirmBtn.textContent = originalText;
+                    };
+                    reader.readAsDataURL(selectedFile);
+                }
+            });
+
+            closeBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+                resetModal();
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    resetModal();
+                }
+            });
+
+            function resetModal() {
+                uploadInput.value = '';
+                previewContainer.classList.remove('show');
+                confirmBtn.disabled = true;
+                uploadArea.classList.remove('dragover');
+                selectedFile = null;
+            }
+        }
+
+        function setupLogoutModal() {
+            const lm = document.getElementById('confirmLogoutModal');
+            const cancel = document.getElementById('cancelLogout');
+            const confirm = document.getElementById('confirmLogout');
+
+            cancel.addEventListener('click', () => {
+                lm.classList.remove('active');
+            });
+
+            confirm.addEventListener('click', () => {
+                localStorage.removeItem('nuarLoggedUser');
+                lm.classList.remove('active');
+                showToast('Você saiu da sua conta');
+                setTimeout(() => {
+                    updateAuthArea();
+                }, 1000);
+            });
+
+            lm.addEventListener('click', e => {
+                if (e.target === lm) {
+                    lm.classList.remove('active');
+                }
+            });
+        }
+
+        window.addEventListener('load', () => {
+            updateAuthArea();
+            setupModal();
+            setupLogoutModal();
+            loadUserDataFromFirebase();
+
+            const startBtn = document.getElementById('startWatchingBtn');
+            if (startBtn) {
+                startBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const loggedUser = localStorage.getItem('nuarLoggedUser');
+                    if (loggedUser) {
+                        window.location.href = '/inicio.html';
+                    } else {
+                        window.location.href = '/cadastro.html';
+                    }
+                });
+            }
+
+            const bubbleTrigger = document.getElementById('bubbleTrigger');
+            const bubbleContent = document.getElementById('bubbleContent');
+            const copyNotification = document.getElementById('copyNotification');
+
+            bubbleTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                bubbleContent.classList.toggle('active');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!bubbleContent.contains(e.target) && !bubbleTrigger.contains(e.target)) {
+                    bubbleContent.classList.remove('active');
+                }
+            });
+
+            document.querySelectorAll('.color-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const color = item.getAttribute('data-color');
+                    navigator.clipboard.writeText(color).then(() => {
+                        copyNotification.classList.add('show');
+                        setTimeout(() => {
+                            copyNotification.classList.remove('show');
+                        }, 2000);
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

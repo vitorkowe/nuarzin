@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuar - Autenticação</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #110e25, #100c2b, #100a36); color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 20% 80%, rgba(91, 72, 212, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(124, 53, 236, 0.1) 0%, transparent 50%); pointer-events: none; }
+        .decorative-shape { position: absolute; border-radius: 50%; opacity: 0.03; pointer-events: none; }
+        .shape1 { width: 600px; height: 600px; background: linear-gradient(135deg, #8063e7, #5c45af); top: -300px; right: -200px; }
+        .shape2 { width: 400px; height: 400px; background: linear-gradient(135deg, #7c35ec, #5c45af); bottom: -200px; left: -100px; }
+        .auth-container { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; padding: 60px 50px; width: 100%; max-width: 480px; position: relative; z-index: 10; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; }
+        .logo { display: flex; justify-content: center; margin-bottom: 40px; }
+        .logo img { height: 50px; filter: drop-shadow(0 0 10px rgba(91, 72, 212, 0.5)); }
+        .auth-header { text-align: center; margin-bottom: 40px; }
+        .auth-title { font-size: 32px; font-weight: 700; margin-bottom: 10px; background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.8)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .auth-subtitle { font-size: 15px; color: rgba(255, 255, 255, 0.6); }
+        .auth-form { display: flex; flex-direction: column; gap: 20px; }
+        .input-group { position: relative; }
+        .auth-input { width: 100%; padding: 18px 55px 18px 20px; background: rgba(20, 20, 30, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 50px; color: #fff; font-size: 15px; transition: all 0.3s; }
+        .auth-input:focus { outline: none; border-color: rgba(128, 99, 231, 0.6); background: rgba(25, 20, 40, 0.9); box-shadow: 0 0 0 3px rgba(128, 99, 231, 0.1); }
+        .auth-input::placeholder { color: rgba(255, 255, 255, 0.4); }
+        .auth-options { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-top: -5px; }
+        .remember-me { display: flex; align-items: center; gap: 8px; cursor: pointer; color: rgba(255, 255, 255, 0.7); transition: color 0.3s; }
+        .remember-me:hover { color: #fff; }
+        .remember-me input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #5c45af; }
+        .auth-submit { width: 100%; padding: 18px; background: linear-gradient(135deg, #5c45af, #7c35ec); border: 2px solid rgba(128, 99, 231, 0.3); border-radius: 50px; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; position: relative; overflow: hidden; }
+        .auth-submit::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1), transparent); transform: translateX(-100%); transition: transform 0.6s; }
+        .auth-submit:hover::before { transform: translateX(100%); }
+        .auth-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(124, 53, 236, 0.4); border-color: rgba(128, 99, 231, 0.6); }
+        .auth-submit:active { transform: translateY(0); }
+        .auth-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+        .arrow-icon { width: 20px; height: 20px; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .auth-footer { text-align: center; margin-top: 30px; font-size: 15px; color: rgba(255, 255, 255, 0.7); }
+        .auth-switch { color: #fff; text-decoration: none; font-weight: 600; cursor: pointer; transition: color 0.3s; border-bottom: 1px solid transparent; }
+        .auth-switch:hover { color: #8063e7; border-bottom-color: #8063e7; }
+        .terms-text { text-align: center; font-size: 13px; color: rgba(255, 255, 255, 0.5); margin-top: 25px; line-height: 1.6; }
+        .terms-text a { color: rgba(255, 255, 255, 0.7); text-decoration: none; transition: color 0.3s; }
+        .terms-text a:hover { color: #8063e7; }
+        .error-message { background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 15px 20px; color: #f87171; font-size: 14px; text-align: center; margin-top: 20px; animation: slideDown 0.4s ease-out; display: none; }
+        .error-message.show { display: block; }
+        .error-message.success { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.4); color: #4ade80; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .page-transition { animation: fadeInUp 0.6s ease-out; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
+        .hidden { display: none; }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        .loading-spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #8063e7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: #fff; font-size: 16px; }
+        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-size: 13px; margin-top: 20px; }
+        .status-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+        .status-error { background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .status-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+    </style>
+</head>
+<body>
+    <div class="decorative-shape shape1"></div>
+    <div class="decorative-shape shape2"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Carregando Firebase...</div>
+        <div class="status-badge status-warning" id="loadingStatus">Aguardando scripts...</div>
+    </div>
+
+    <div class="auth-container page-transition hidden" id="loginPage">
+        <div class="logo"><img src="https://i.ibb.co/DDyKRKY6/nuarrr.png" alt="Nuar"></div>
+        <div class="auth-header">
+            <h1 class="auth-title">Conta de usuário</h1>
+            <p class="auth-subtitle">Uma única conta, Conteúdo infinitamente grátis</p>
+        </div>
+        <form class="auth-form" id="loginForm">
+            <div class="input-group"><input type="email" class="auth-input" id="loginEmail" placeholder="Seu email" required></div>
+            <div class="input-group"><input type="password" class="auth-input" id="loginPassword" placeholder="Sua senha" required></div>
+            <div class="auth-options">
+                <label class="remember-me"><input type="checkbox" id="rememberMe"><span>Lembrar a conta?</span></label>
+            </div>
+            <button type="submit" class="auth-submit"><span class="arrow-icon">→</span><span>Logar na Conta</span></button>
+        </form>
+        <div class="auth-footer">Ainda não é usuário? <a href="#" class="auth-switch" onclick="showRegister(event)">Faça seu Cadastro!</a></div>
+        <div class="error-message" id="loginError"></div>
+    </div>
+
+    <div class="auth-container page-transition hidden" id="registerPage">
+        <div class="logo"><img src="https://i.ibb.co/DDyKRKY6/nuarrr.png" alt="Nuar"></div>
+        <div class="auth-header">
+            <h1 class="auth-title">Novo Usuário</h1>
+            <p class="auth-subtitle">Tenha acesso a sua conta em segundos</p>
+        </div>
+        <form class="auth-form" id="registerForm">
+            <div class="input-group"><input type="text" class="auth-input" id="registerUsername" placeholder="Nome de usuário único" required></div>
+            <div class="input-group"><input type="email" class="auth-input" id="registerEmail" placeholder="Seu email" required></div>
+            <div class="input-group"><input type="password" class="auth-input" id="registerPassword" placeholder="Sua senha" required minlength="6"></div>
+            <div class="input-group"><input type="password" class="auth-input" id="registerConfirmPassword" placeholder="Repita sua senha" required></div>
+            <div class="input-group"><input type="text" class="auth-input" id="registerAccessCode" placeholder="Código de acesso" required></div>
+            <p class="terms-text">Criando essa conta, você aceita os <a href="/termos.html" target="_blank">termos de responsabilidade</a></p>
+            <button type="submit" class="auth-submit"><span class="arrow-icon">✓</span><span>Enviar Cadastro</span></button>
+        </form>
+        <div class="auth-footer">Já é usuário? <a href="#" class="auth-switch" onclick="showLogin(event)">Entre na sua conta!</a></div>
+        <div class="error-message" id="registerError"></div>
+    </div>
+
+    <!-- Carregar Firebase de forma sequencial -->
+    <script>
+        // Proteção contra loop de reload
+        const LOAD_KEY = 'nuar_loading_attempt';
+        const MAX_RETRIES = 3;
+        const RETRY_TIMEOUT = 5000; // 5 segundos
+        
+        // Verificar tentativas de carregamento
+        function checkLoadLoop() {
+            const now = Date.now();
+            const lastAttempt = localStorage.getItem(LOAD_KEY);
+            
+            if (lastAttempt) {
+                const attempts = JSON.parse(lastAttempt);
+                const timeDiff = now - attempts.timestamp;
+                
+                // Se última tentativa foi há menos de 5 segundos
+                if (timeDiff < RETRY_TIMEOUT) {
+                    if (attempts.count >= MAX_RETRIES) {
+                        console.error('❌ Loop detectado! Parando recarregamentos.');
+                        document.getElementById('loadingOverlay').innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <h2 style="color: #f87171; margin-bottom: 20px;">⚠️ Loop Detectado</h2>
+                                <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                                    A página está tentando recarregar continuamente.<br>
+                                    Isso pode ser um problema de configuração.
+                                </p>
+                                <button onclick="localStorage.removeItem('${LOAD_KEY}'); location.reload()" style="
+                                    padding: 12px 24px;
+                                    background: #5c45af;
+                                    border: none;
+                                    border-radius: 8px;
+                                    color: white;
+                                    cursor: pointer;
+                                    font-size: 14px;
+                                    margin: 5px;
+                                ">Resetar e Tentar Novamente</button>
+                            </div>
+                        `;
+                        return false;
+                    }
+                    // Incrementar contador
+                    localStorage.setItem(LOAD_KEY, JSON.stringify({
+                        count: attempts.count + 1,
+                        timestamp: now
+                    }));
+                } else {
+                    // Resetar se passou tempo suficiente
+                    localStorage.setItem(LOAD_KEY, JSON.stringify({
+                        count: 1,
+                        timestamp: now
+                    }));
+                }
+            } else {
+                // Primeira tentativa
+                localStorage.setItem(LOAD_KEY, JSON.stringify({
+                    count: 1,
+                    timestamp: now
+                }));
+            }
+            
+            return true;
+        }
+        
+        // Limpar flag após carregamento bem-sucedido
+        function clearLoadFlag() {
+            setTimeout(() => {
+                localStorage.removeItem(LOAD_KEY);
+                console.log('✅ Flag de carregamento limpa');
+            }, 2000);
+        }
+        
+        console.log('🚀 Iniciando carregamento do Firebase...');
+        
+        // Verificar loop antes de continuar
+        if (!checkLoadLoop()) {
+            console.error('❌ Carregamento bloqueado por proteção de loop');
+            throw new Error('Loop detectado');
+        }
+        
+        // Atualizar status
+        function updateLoadingStatus(message, type = 'warning') {
+            const statusEl = document.getElementById('loadingStatus');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.className = 'status-badge status-' + type;
+            }
+        }
+
+        // Carregar script dinamicamente
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                console.log('📦 Carregando:', src);
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => {
+                    console.log('✅ Carregado:', src);
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.error('❌ Erro ao carregar:', src);
+                    reject(new Error('Falha ao carregar: ' + src));
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        // Carregar Firebase em sequência
+        async function loadFirebase() {
+            try {
+                updateLoadingStatus('Carregando Firebase App...', 'warning');
+                await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+                
+                updateLoadingStatus('Carregando Firebase Auth...', 'warning');
+                await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+                
+                updateLoadingStatus('Carregando Firebase Database...', 'warning');
+                await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+                
+                updateLoadingStatus('Firebase carregado!', 'success');
+                console.log('✅ Todos os scripts carregados');
+                
+                // Aguardar 500ms para garantir que tudo está pronto
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Inicializar app
+                await initializeFirebaseApp();
+                
+            } catch (error) {
+                console.error('❌ Erro fatal ao carregar Firebase:', error);
+                updateLoadingStatus('Erro ao carregar Firebase', 'error');
+                
+                // Mostrar erro na tela
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <h2 style="color: #f87171; margin-bottom: 20px;">⚠️ Erro ao Carregar</h2>
+                            <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                                Não foi possível carregar os scripts do Firebase.<br>
+                                Verifique sua conexão ou desative bloqueadores de anúncios.
+                            </p>
+                            <button onclick="location.reload()" style="
+                                padding: 12px 24px;
+                                background: #5c45af;
+                                border: none;
+                                border-radius: 8px;
+                                color: white;
+                                cursor: pointer;
+                                font-size: 14px;
+                            ">Tentar Novamente</button>
+                        </div>
+                    `;
+                }, 2000);
+            }
+        }
+
+        // Inicializar Firebase
+        async function initializeFirebaseApp() {
+            console.log('🔧 Inicializando Firebase App...');
+            
+            // Verificar se firebase existe
+            if (typeof firebase === 'undefined') {
+                throw new Error('Firebase não está definido após carregar os scripts');
+            }
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyDHlEtmKXGeAsY9Ih-BBP-yiGrKJIKRD9k",
+                authDomain: "nuarkowe.firebaseapp.com",
+                databaseURL: "https://nuarkowe-default-rtdb.firebaseio.com",
+                projectId: "nuarkowe",
+                storageBucket: "nuarkowe.firebasestorage.app",
+                messagingSenderId: "1063041816951",
+                appId: "1:1063041816951:web:0ffe4185fd0102b878e972"
+            };
+
+            try {
+                // Verificar se já foi inicializado
+                if (!firebase.apps.length) {
+                    window.app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    window.app = firebase.app();
+                    console.log('ℹ️ Firebase já estava inicializado');
+                }
+                
+                window.auth = firebase.auth();
+                window.database = firebase.database();
+                
+                console.log('✅ Firebase inicializado:', window.app.name);
+                updateLoadingStatus('Sistema pronto!', 'success');
+                
+                // Limpar flag de carregamento (sucesso!)
+                clearLoadFlag();
+                
+                console.log('🎨 Preparando transição visual...');
+                
+                // Esconder loading e mostrar formulário com delay para garantir renderização
+                setTimeout(() => {
+                    const loadingEl = document.getElementById('loadingOverlay');
+                    const loginEl = document.getElementById('loginPage');
+                    
+                    console.log('🔄 Escondendo loading overlay...');
+                    loadingEl.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        loadingEl.style.display = 'none';
+                        console.log('✅ Loading escondido');
+                        
+                        console.log('🔄 Mostrando formulário de login...');
+                        loginEl.classList.remove('hidden');
+                        loginEl.style.display = 'flex';
+                        console.log('✅ Formulário visível');
+                    }, 300);
+                }, 800);
+                
+                // Configurar tudo (só uma vez)
+                setupApp();
+                
+            } catch (error) {
+                console.error('❌ Erro ao inicializar Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Flag para evitar múltiplas configurações
+        let isAppConfigured = false;
+
+        // Configurar aplicação
+        function setupApp() {
+            if (isAppConfigured) {
+                console.log('⚠️ Aplicação já configurada, pulando...');
+                return;
+            }
+            
+            console.log('⚙️ Configurando aplicação...');
+            
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            // Cadastro
+            registerForm.addEventListener('submit', handleRegister);
+            
+            // Login
+            loginForm.addEventListener('submit', handleLogin);
+            
+            // Limpar erros ao digitar
+            document.querySelectorAll('.auth-input').forEach(input => {
+                input.addEventListener('input', () => {
+                    hideError(document.getElementById('loginError'));
+                    hideError(document.getElementById('registerError'));
+                });
+            });
+            
+            // Auth state (só uma vez) - SEM REDIRECIONAMENTO AUTOMÁTICO
+            window.auth.onAuthStateChanged((user) => {
+                if (user) {
+                    console.log('👤 Usuário logado:', user.email);
+                    // NÃO redirecionar automaticamente - só mostrar no console
+                }
+            });
+            
+            isAppConfigured = true;
+            console.log('✅ Aplicação configurada');
+        }
+
+        // Funções auxiliares
+        function showError(el, msg, success = false) {
+            if (!el) return;
+            el.textContent = msg;
+            el.classList.toggle('success', success);
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        function hideError(el) {
+            if (!el) return;
+            el.classList.remove('show');
+        }
+
+        function showRegister(e) {
+            e.preventDefault();
+            hideError(document.getElementById('loginError'));
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.remove('hidden');
+        }
+
+        function showLogin(e) {
+            e.preventDefault();
+            hideError(document.getElementById('registerError'));
+            document.getElementById('registerPage').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+        }
+
+        // Handle cadastro
+        async function handleRegister(e) {
+            e.preventDefault();
+            const registerError = document.getElementById('registerError');
+            hideError(registerError);
+            
+            const btn = e.target.querySelector('.auth-submit');
+            const btnTxt = btn.querySelector('span:last-child');
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const accessCode = document.getElementById('registerAccessCode').value.trim();
+            
+            // Validações
+            if (!username || !email || !password || !confirmPassword || !accessCode) {
+                return showError(registerError, '⚠️ Preencha todos os campos.');
+            }
+            
+            if (accessCode !== 'delinquentes') {
+                showError(registerError, '❌ Código de acesso inválido.');
+                document.getElementById('registerAccessCode').value = '';
+                return;
+            }
+            
+            if (username.length < 3) {
+                return showError(registerError, '⚠️ Nome muito curto (mín. 3).');
+            }
+            
+            if (password !== confirmPassword) {
+                return showError(registerError, '⚠️ Senhas não coincidem.');
+            }
+            
+            if (password.length < 6) {
+                return showError(registerError, '⚠️ Senha muito curta (mín. 6).');
+            }
+            
+            btn.disabled = true;
+            btnTxt.textContent = 'Cadastrando...';
+            
+            try {
+                const userCredential = await window.auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                await window.database.ref(`users/${user.uid}`).set({
+                    username: username,
+                    email: email,
+                    createdAt: Date.now(),
+                    avatar: null
+                });
+                
+                localStorage.setItem('nuarLoggedUser', JSON.stringify({
+                    nome: username,
+                    username: username,
+                    email: email,
+                    uid: user.uid,
+                    avatar: null
+                }));
+                
+                showError(registerError, `✓ Bem-vindo, ${username}!`, true);
+                setTimeout(() => window.location.href = '/inicio.html', 1500);
+                
+            } catch (err) {
+                console.error(err);
+                let errorMsg = 'Erro ao criar conta';
+                if (err.code === 'auth/email-already-in-use') errorMsg = '❌ Email já cadastrado';
+                if (err.code === 'auth/invalid-email') errorMsg = '❌ Email inválido';
+                if (err.code === 'auth/weak-password') errorMsg = '❌ Senha muito fraca';
+                showError(registerError, errorMsg);
+            } finally {
+                btn.disabled = false;
+                btnTxt.textContent = 'Enviar Cadastro';
+            }
+        }
+
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const loginError = document.getElementById('loginError');
+            hideError(loginError);
+            
+            const btn = e.target.querySelector('.auth-submit');
+            const btnTxt = btn.querySelector('span:last-child');
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            if (!email || !password) {
+                return showError(loginError, '⚠️ Preencha email e senha.');
+            }
+            
+            btn.disabled = true;
+            btnTxt.textContent = 'Entrando...';
+            
+            try {
+                const userCredential = await window.auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                const snapshot = await window.database.ref(`users/${user.uid}`).once('value');
+                
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    
+                    localStorage.setItem('nuarLoggedUser', JSON.stringify({
+                        nome: userData.username,
+                        username: userData.username,
+                        email: userData.email,
+                        uid: user.uid,
+                        avatar: userData.avatar || null
+                    }));
+                    
+                    if (rememberMe) {
+                        localStorage.setItem('nuarRememberUser', JSON.stringify({
+                            email: email,
+                            uid: user.uid
+                        }));
+                    }
+                    
+                    showError(loginError, '✓ Login realizado!', true);
+                    setTimeout(() => window.location.href = '/inicio.html', 1000);
+                } else {
+                    showError(loginError, '❌ Dados não encontrados');
+                }
+            } catch (err) {
+                console.error(err);
+                let errorMsg = '❌ Email ou senha incorretos';
+                if (err.code === 'auth/user-not-found') errorMsg = '❌ Usuário não encontrado';
+                if (err.code === 'auth/wrong-password') errorMsg = '❌ Senha incorreta';
+                if (err.code === 'auth/invalid-credential') errorMsg = '❌ Credenciais inválidas';
+                showError(loginError, errorMsg);
+            } finally {
+                btn.disabled = false;
+                btnTxt.textContent = 'Logar na Conta';
+            }
+        }
+
+        // Iniciar carregamento quando DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadFirebase);
+        } else {
+            loadFirebase();
+        }
+    </script>
+</body>
+</html>

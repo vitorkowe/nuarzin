@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Favoritos - Nuar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            background: #0f0f1e;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo img {
+            height: 50px;
+        }
+
+        .back-btn {
+            background: #553ec4;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-btn:hover {
+            background: #6d4fd9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(85, 62, 196, 0.4);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #553ec4;
+            font-size: 32px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: #0f0f1e;
+            color: #e0e0e0;
+            border: 2px solid #2a2a3e;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #553ec4;
+            border-color: #553ec4;
+            color: white;
+        }
+
+        .tab-btn:hover {
+            border-color: #553ec4;
+            transform: translateY(-2px);
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: #0f0f1e;
+            border-radius: 15px;
+            border: 2px dashed #2a2a3e;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            color: #9ca3af;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #6b7280;
+        }
+
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+        }
+
+        .favorite-card {
+            background: #0f0f1e;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 2px solid #2a2a3e;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .favorite-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(85, 62, 196, 0.3);
+            border-color: #553ec4;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 300px;
+            background: #2a2a3e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-placeholder {
+            font-size: 60px;
+            opacity: 0.3;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 38, 38, 0.9);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+            opacity: 0;
+        }
+
+        .favorite-card:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .remove-btn:hover {
+            background: rgba(185, 28, 28, 1);
+            transform: scale(1.1);
+        }
+
+        .card-info {
+            padding: 15px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .card-meta {
+            font-size: 14px;
+            color: #9ca3af;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rating {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(10, 10, 15, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(85, 62, 196, 0.5);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .favorites-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .card-image {
+                height: 220px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHlEtmKXGeAsY9Ih-BBp-yiQrKJIKRD9k",
+            authDomain: "nuarkowe.firebaseapp.com",
+            projectId: "nuarkowe",
+            storageBucket: "nuarkowe.firebasestorage.app",
+            messagingSenderId: "1063041816951",
+            appId: "1:1063041816951:web:0ffe4185fd0102b878e972"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+    </script>
+
+    <!-- Resto do HTML aqui -->
+</body>
+    <div class="header">
+        <div class="logo">
+            <img src="https://i.ibb.co/DDyKRKY6/nuarrr.png" alt="Nuar">
+        </div>
+        <a href="/inicio.html" class="back-btn">← Voltar</a>
+    </div>
+
+    <div class="container">
+        <h1>Meus Favoritos</h1>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('todos')">Todos</button>
+            <button class="tab-btn" onclick="switchTab('filmes')">Filmes</button>
+            <button class="tab-btn" onclick="switchTab('series')">Séries</button>
+            <button class="tab-btn" onclick="switchTab('animes')">Animes</button>
+        </div>
+
+        <div id="todos" class="content active">
+            <div id="todos-grid" class="favorites-grid"></div>
+        </div>
+
+        <div id="filmes" class="content">
+            <div id="filmes-grid" class="favorites-grid"></div>
+        </div>
+
+        <div id="series" class="content">
+            <div id="series-grid" class="favorites-grid"></div>
+        </div>
+
+        <div id="animes" class="content">
+            <div id="animes-grid" class="favorites-grid"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Base de dados completa (mesma do inicio.html)
+        const allContent = {
+            filmes: [
+                {id: 1, title: "Meu Malvado Favorito 4", year: 2024, rating: 6.5, duration: "1h 34m", genres: ["Animação", "Aventura"], description: "Gru dá as boas-vindas a um novo membro da família, Gru Jr., que pretende atormentar seu pai.", imageUrl: "https://br.web.img3.acsta.net/img/6c/71/6c71afa89fd8ed8999b3e04d8d794a0e.jpg", videoUrl: "https://embed.warezcdn.cc/filme/tt7510222", type: 'filme'},
+                {id: 2, title: "Duna 2", year: 2024, rating: 8.0, duration: "2h 46m", genres: ["Ficção científica", "Aventura"], description: "Paul Atreides se une a Chani e aos Fremen enquanto busca vingança.", imageUrl: "https://ingresso-a.akamaihd.net/prd/img/movie/duna-parte-2/3971d5d6-702d-40d8-b990-872d4ffe3e32.webp", videoUrl: "https://embed.warezcdn.cc/filme/tt15239678", type: 'filme'},
+                {id: 3, title: "Bailarina", year: 2025, rating: 7.2, duration: "2h 5m", genres: ["Ação", "Aventura"], description: "Treinada nas tradições assassinas, Eve Macarro enfrenta um exército de assassinos.", imageUrl: "https://m.media-amazon.com/images/M/MV5BMDQzMDRhMDItYWEzMi00Mzk2LTg3M2EtNzMzNGRlYTNlMmZkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", videoUrl: "https://embed.warezcdn.cc/filme/tt7181546", type: 'filme'},
+                {id: 4, title: "Traga ela de volta", year: 2025, rating: 8.5, duration: "1h 36min", genres: ["Terror", "Suspense"], description: "Faça Ela Voltar acompanha a vida de dois meio-irmãos que, após encontrarem seu pai morto no banheiro, são alocados para um lar adotivo.", imageUrl: "https://preview.redd.it/bring-her-back-v0-95sztzhlskaf1.jpeg?auto=webp&s=5d6317c75c4203172cc7f44ad87104d1ddad37d3", videoUrl: "https://embed.warezcdn.cc/filme/tt32246771", type: 'filme'}
+            ],
+            series: [
+                {id: 101, title: "Breaking Bad", year: 2008, rating: 9.5, duration: "5 temporadas", genres: ["Drama", "Crime"], description: "Um professor diagnosticado com câncer se junta a um ex-aluno para produzir metanfetamina.", imageUrl: "https://img.elo7.com.br/product/685x685/26A857B/big-poster-serie-breaking-bad-lo02-tamanho-90x60-cm-poster.jpg", videoUrl: "https://embed.warezcdn.cc/serie/tt0903747", type: 'serie'},
+                {id: 102, title: "Stranger Things", year: 2016, rating: 8.7, duration: "4 temporadas", genres: ["Ficção científica", "Terror"], description: "Quando um garoto desaparece, sua mãe e amigos enfrentam forças aterrorizantes.", imageUrl: "https://i.pinimg.com/1200x/00/ea/7c/00ea7c88e9e80f8bea6d13f3f7f0a810.jpg", videoUrl: "https://embed.warezcdn.cc/serie/tt4574334", type: 'serie'},
+            ],
+            animes: [
+                {id: 201, title: "Kaiju No. 8", year: 2024, rating: 9.0, duration: "1 temporada", genres: ["Ação", "Fantasia"], description: "Kaiju No. 8 é uma série de mangá japonesa escrita e ilustrada por Naoya Matsumoto.", imageUrl: "https://upload.wikimedia.org/wikipedia/pt/9/92/Kaiju_N%C2%BA_8.jpg", videoUrl: "https://embed.warezcdn.cc/serie/tt21975436", type: 'anime'},
+                {id: 202, title: "Gachiakuta", year: 2025, rating: 8.6, duration: "1 temporada", genres: ["Ação", "Aventura"], description: "Gachiakuta se passa em uma sociedade dividida entre uma cidade flutuante e um lixão no nível inferior.", imageUrl: "https://m.media-amazon.com/images/M/MV5BZDU5ZmEzODYtMDU2OS00NTZiLTk4MWYtYWUyZWUzNGU2ODdjXkEyXkFqcGc@._V1_.jpg", videoUrl: "https://embed.warezcdn.cc/serie/tt32612521", type: 'anime'}
+            ]
+        };
+
+        let favorites = {
+            filmes: [],
+            series: [],
+            animes: []
+        };
+
+        // Carrega favoritos do localStorage
+        function loadFavorites() {
+            try {
+                const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
+                
+                if (!loggedUser) {
+                    alert('Você precisa estar logado para ver seus favoritos!');
+                    window.location.href = '/index.html';
+                    return;
+                }
+
+                const savedFavorites = localStorage.getItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`);
+                
+                if (savedFavorites) {
+                    const favoriteIds = JSON.parse(savedFavorites);
+                    console.log('💜 IDs dos favoritos:', favoriteIds);
+                    
+                    // Busca os dados completos de cada favorito
+                    favoriteIds.forEach(id => {
+                        const filme = allContent.filmes.find(f => f.id === id);
+                        const serie = allContent.series.find(s => s.id === id);
+                        const anime = allContent.animes.find(a => a.id === id);
+                        
+                        if (filme) favorites.filmes.push(filme);
+                        if (serie) favorites.series.push(serie);
+                        if (anime) favorites.animes.push(anime);
+                    });
+                    
+                    console.log('✅ Favoritos carregados:', favorites);
+                }
+                
+                renderFavorites();
+            } catch (error) {
+                console.error('❌ Erro ao carregar favoritos:', error);
+                alert('Erro ao carregar favoritos. Tente novamente.');
+            }
+        }
+
+        function renderFavorites() {
+            const todosGrid = document.getElementById('todos-grid');
+            const filmesGrid = document.getElementById('filmes-grid');
+            const seriesGrid = document.getElementById('series-grid');
+            const animesGrid = document.getElementById('animes-grid');
+
+            // Limpar grids
+            todosGrid.innerHTML = '';
+            filmesGrid.innerHTML = '';
+            seriesGrid.innerHTML = '';
+            animesGrid.innerHTML = '';
+
+            // Todos os favoritos
+            const allFavorites = [...favorites.filmes, ...favorites.series, ...favorites.animes];
+            
+            if (allFavorites.length === 0) {
+                todosGrid.innerHTML = getEmptyState();
+            } else {
+                allFavorites.forEach(item => {
+                    todosGrid.innerHTML += createCard(item);
+                });
+            }
+
+            // Filmes
+            if (favorites.filmes.length === 0) {
+                filmesGrid.innerHTML = getEmptyState('filmes');
+            } else {
+                favorites.filmes.forEach(item => {
+                    filmesGrid.innerHTML += createCard(item);
+                });
+            }
+
+            // Séries
+            if (favorites.series.length === 0) {
+                seriesGrid.innerHTML = getEmptyState('séries');
+            } else {
+                favorites.series.forEach(item => {
+                    seriesGrid.innerHTML += createCard(item);
+                });
+            }
+
+            // Animes
+            if (favorites.animes.length === 0) {
+                animesGrid.innerHTML = getEmptyState('animes');
+            } else {
+                favorites.animes.forEach(item => {
+                    animesGrid.innerHTML += createCard(item);
+                });
+            }
+        }
+
+        function createCard(item) {
+            return `
+                <div class="favorite-card" onclick="window.location.href='inicio'">
+                    <div class="card-image">
+                        <img src="${item.imageUrl}" alt="${item.title}" onerror="this.parentElement.innerHTML='<div class=card-placeholder>🎬</div>'">
+                        <button class="remove-btn" onclick="event.stopPropagation(); removeFavorite(${item.id})" title="Remover dos favoritos">×</button>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title" title="${item.title}">${item.title}</div>
+                        <div class="card-meta">
+                            <span>${item.year}</span>
+                            <span class="rating">⭐ ${item.rating}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getEmptyState(type = '') {
+            const message = type ? `Você ainda não favoritou nenhum ${type}` : 'Você ainda não tem favoritos';
+            return `
+                <div class="empty-state">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                    </svg>
+                    <h3>${message}</h3>
+                    <p>Comece a favoritar seus conteúdos preferidos!</p>
+                </div>
+            `;
+        }
+
+        function removeFavorite(id) {
+            if (confirm('Deseja remover este item dos favoritos?')) {
+                try {
+                    const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
+                    if (!loggedUser) return;
+
+                    const savedFavorites = localStorage.getItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`);
+                    if (savedFavorites) {
+                        let favoriteIds = JSON.parse(savedFavorites);
+                        favoriteIds = favoriteIds.filter(favId => favId !== id);
+                        localStorage.setItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`, JSON.stringify(favoriteIds));
+                        
+                        showToast('Removido dos favoritos!');
+                        
+                        // Recarrega a página
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    }
+                } catch (error) {
+                    console.error('❌ Erro ao remover favorito:', error);
+                    alert('Erro ao remover favorito');
+                }
+            }
+        }
+
+        function switchTab(tabName) {
+            // Remove active de todos os botões e conteúdos
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(content => content.classList.remove('active'));
+            
+            // Adiciona active no botão clicado e conteúdo correspondente
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Carrega favoritos ao iniciar
+        window.addEventListener('load', () => {
+            console.log('🚀 Página de favoritos carregada');
+            loadFavorites();
+        });
+    </script>
+</body>
+</html>

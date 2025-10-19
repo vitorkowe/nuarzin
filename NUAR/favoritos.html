@@ -281,127 +281,114 @@
 </head>
 <body>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyDHlEtmKXGeAsY9Ih-BBp-yiQrKJIKRD9k",
-            authDomain: "nuarkowe.firebaseapp.com",
-            projectId: "nuarkowe",
-            storageBucket: "nuarkowe.firebasestorage.app",
-            messagingSenderId: "1063041816951",
-            appId: "1:1063041816951:web:0ffe4185fd0102b878e972"
-        };
-        
-        const app = initializeApp(firebaseConfig);
-    </script>
+<!-- Firebase SDK Completo -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <!-- Resto do HTML aqui -->
-</body>
-    <div class="header">
-        <div class="logo">
-            <img src="https://i.ibb.co/DDyKRKY6/nuarrr.png" alt="Nuar">
-        </div>
-        <a href="/inicio.html" class="back-btn">← Voltar</a>
-    </div>
+<script>
+    // Inicializar Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDHlEtmKXGeAsY9Ih-BBP-yiGrKJIKRD9k",
+        authDomain: "nuarkowe.firebaseapp.com",
+        databaseURL: "https://nuarkowe-default-rtdb.firebaseio.com",
+        projectId: "nuarkowe",
+        storageBucket: "nuarkowe.firebasestorage.app",
+        messagingSenderId: "1063041816951",
+        appId: "1:1063041816951:web:0ffe4185fd0102b878e972"
+    };
 
-    <div class="container">
-        <h1>Meus Favoritos</h1>
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('todos')">Todos</button>
-            <button class="tab-btn" onclick="switchTab('filmes')">Filmes</button>
-            <button class="tab-btn" onclick="switchTab('series')">Séries</button>
-            <button class="tab-btn" onclick="switchTab('animes')">Animes</button>
-        </div>
+    // Conteúdo carregado do Firebase
+    let allContent = {
+        filmes: [],
+        series: [],
+        animes: []
+    };
 
-        <div id="todos" class="content active">
-            <div id="todos-grid" class="favorites-grid"></div>
-        </div>
+    let favorites = {
+        filmes: [],
+        series: [],
+        animes: []
+    };
 
-        <div id="filmes" class="content">
-            <div id="filmes-grid" class="favorites-grid"></div>
-        </div>
+    // Carrega conteúdo do Firebase
+    function loadContentFromFirebase() {
+        return new Promise((resolve) => {
+            let loadedCount = 0;
+            const totalCategories = 3;
 
-        <div id="series" class="content">
-            <div id="series-grid" class="favorites-grid"></div>
-        </div>
+            database.ref('content/filmes').once('value', (snapshot) => {
+                const data = snapshot.val();
+                allContent.filmes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
+                console.log('📽️ Filmes carregados:', allContent.filmes.length);
+                loadedCount++;
+                if (loadedCount === totalCategories) resolve();
+            });
 
-        <div id="animes" class="content">
-            <div id="animes-grid" class="favorites-grid"></div>
-        </div>
-    </div>
+            database.ref('content/series').once('value', (snapshot) => {
+                const data = snapshot.val();
+                allContent.series = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
+                console.log('📺 Séries carregadas:', allContent.series.length);
+                loadedCount++;
+                if (loadedCount === totalCategories) resolve();
+            });
 
-    <div class="toast" id="toast">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-        </svg>
-        <span id="toastMessage"></span>
-    </div>
+            database.ref('content/animes').once('value', (snapshot) => {
+                const data = snapshot.val();
+                allContent.animes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key})) : [];
+                console.log('🎌 Animes carregados:', allContent.animes.length);
+                loadedCount++;
+                if (loadedCount === totalCategories) resolve();
+            });
+        });
+    }
 
-    <script>
-        // Base de dados completa (mesma do inicio.html)
-        const allContent = {
-            filmes: [
-                {id: 1, title: "Meu Malvado Favorito 4", year: 2024, rating: 6.5, duration: "1h 34m", genres: ["Animação", "Aventura"], description: "Gru dá as boas-vindas a um novo membro da família, Gru Jr., que pretende atormentar seu pai.", imageUrl: "https://br.web.img3.acsta.net/img/6c/71/6c71afa89fd8ed8999b3e04d8d794a0e.jpg", videoUrl: "https://embed.warezcdn.cc/filme/tt7510222", type: 'filme'},
-                {id: 2, title: "Duna 2", year: 2024, rating: 8.0, duration: "2h 46m", genres: ["Ficção científica", "Aventura"], description: "Paul Atreides se une a Chani e aos Fremen enquanto busca vingança.", imageUrl: "https://ingresso-a.akamaihd.net/prd/img/movie/duna-parte-2/3971d5d6-702d-40d8-b990-872d4ffe3e32.webp", videoUrl: "https://embed.warezcdn.cc/filme/tt15239678", type: 'filme'},
-                {id: 3, title: "Bailarina", year: 2025, rating: 7.2, duration: "2h 5m", genres: ["Ação", "Aventura"], description: "Treinada nas tradições assassinas, Eve Macarro enfrenta um exército de assassinos.", imageUrl: "https://m.media-amazon.com/images/M/MV5BMDQzMDRhMDItYWEzMi00Mzk2LTg3M2EtNzMzNGRlYTNlMmZkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", videoUrl: "https://embed.warezcdn.cc/filme/tt7181546", type: 'filme'},
-                {id: 4, title: "Traga ela de volta", year: 2025, rating: 8.5, duration: "1h 36min", genres: ["Terror", "Suspense"], description: "Faça Ela Voltar acompanha a vida de dois meio-irmãos que, após encontrarem seu pai morto no banheiro, são alocados para um lar adotivo.", imageUrl: "https://preview.redd.it/bring-her-back-v0-95sztzhlskaf1.jpeg?auto=webp&s=5d6317c75c4203172cc7f44ad87104d1ddad37d3", videoUrl: "https://embed.warezcdn.cc/filme/tt32246771", type: 'filme'}
-            ],
-            series: [
-                {id: 101, title: "Breaking Bad", year: 2008, rating: 9.5, duration: "5 temporadas", genres: ["Drama", "Crime"], description: "Um professor diagnosticado com câncer se junta a um ex-aluno para produzir metanfetamina.", imageUrl: "https://img.elo7.com.br/product/685x685/26A857B/big-poster-serie-breaking-bad-lo02-tamanho-90x60-cm-poster.jpg", videoUrl: "https://embed.warezcdn.cc/serie/tt0903747", type: 'serie'},
-                {id: 102, title: "Stranger Things", year: 2016, rating: 8.7, duration: "4 temporadas", genres: ["Ficção científica", "Terror"], description: "Quando um garoto desaparece, sua mãe e amigos enfrentam forças aterrorizantes.", imageUrl: "https://i.pinimg.com/1200x/00/ea/7c/00ea7c88e9e80f8bea6d13f3f7f0a810.jpg", videoUrl: "https://embed.warezcdn.cc/serie/tt4574334", type: 'serie'},
-            ],
-            animes: [
-                {id: 201, title: "Kaiju No. 8", year: 2024, rating: 9.0, duration: "1 temporada", genres: ["Ação", "Fantasia"], description: "Kaiju No. 8 é uma série de mangá japonesa escrita e ilustrada por Naoya Matsumoto.", imageUrl: "https://upload.wikimedia.org/wikipedia/pt/9/92/Kaiju_N%C2%BA_8.jpg", videoUrl: "https://embed.warezcdn.cc/serie/tt21975436", type: 'anime'},
-                {id: 202, title: "Gachiakuta", year: 2025, rating: 8.6, duration: "1 temporada", genres: ["Ação", "Aventura"], description: "Gachiakuta se passa em uma sociedade dividida entre uma cidade flutuante e um lixão no nível inferior.", imageUrl: "https://m.media-amazon.com/images/M/MV5BZDU5ZmEzODYtMDU2OS00NTZiLTk4MWYtYWUyZWUzNGU2ODdjXkEyXkFqcGc@._V1_.jpg", videoUrl: "https://embed.warezcdn.cc/serie/tt32612521", type: 'anime'}
-            ]
-        };
-
-        let favorites = {
-            filmes: [],
-            series: [],
-            animes: []
-        };
-
-        // Carrega favoritos do localStorage
-        function loadFavorites() {
-            try {
-                const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
-                
-                if (!loggedUser) {
-                    alert('Você precisa estar logado para ver seus favoritos!');
-                    window.location.href = '/index.html';
-                    return;
-                }
-
-                const savedFavorites = localStorage.getItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`);
-                
-                if (savedFavorites) {
-                    const favoriteIds = JSON.parse(savedFavorites);
-                    console.log('💜 IDs dos favoritos:', favoriteIds);
-                    
-                    // Busca os dados completos de cada favorito
-                    favoriteIds.forEach(id => {
-                        const filme = allContent.filmes.find(f => f.id === id);
-                        const serie = allContent.series.find(s => s.id === id);
-                        const anime = allContent.animes.find(a => a.id === id);
-                        
-                        if (filme) favorites.filmes.push(filme);
-                        if (serie) favorites.series.push(serie);
-                        if (anime) favorites.animes.push(anime);
-                    });
-                    
-                    console.log('✅ Favoritos carregados:', favorites);
-                }
-                
-                renderFavorites();
-            } catch (error) {
-                console.error('❌ Erro ao carregar favoritos:', error);
-                alert('Erro ao carregar favoritos. Tente novamente.');
+    // Carrega favoritos do localStorage
+    async function loadFavorites() {
+        try {
+            const loggedUser = JSON.parse(localStorage.getItem('nuarLoggedUser'));
+            
+            if (!loggedUser) {
+                alert('Você precisa estar logado para ver seus favoritos!');
+                window.location.href = '/index.html';
+                return;
             }
+
+            // Aguarda carregar o conteúdo do Firebase
+            await loadContentFromFirebase();
+
+            const savedFavorites = localStorage.getItem(`nuarFavorites_${loggedUser.email || loggedUser.username}`);
+            
+            if (savedFavorites) {
+                const favoriteIds = JSON.parse(savedFavorites);
+                console.log('💜 IDs dos favoritos:', favoriteIds);
+                
+                // Busca os dados completos de cada favorito usando firebaseKey OU id
+                favoriteIds.forEach(favId => {
+                    const filme = allContent.filmes.find(f => (f.firebaseKey || f.id) === favId);
+                    const serie = allContent.series.find(s => (s.firebaseKey || s.id) === favId);
+                    const anime = allContent.animes.find(a => (a.firebaseKey || a.id) === favId);
+                    
+                    if (filme) favorites.filmes.push(filme);
+                    if (serie) favorites.series.push(serie);
+                    if (anime) favorites.animes.push(anime);
+                });
+                
+                console.log('✅ Favoritos encontrados:', {
+                    filmes: favorites.filmes.length,
+                    series: favorites.series.length,
+                    animes: favorites.animes.length
+                });
+            }
+            
+            renderFavorites();
+        } catch (error) {
+            console.error('❌ Erro ao carregar favoritos:', error);
+            alert('Erro ao carregar favoritos. Tente novamente.');
         }
+    }
 
         function renderFavorites() {
             const todosGrid = document.getElementById('todos-grid');

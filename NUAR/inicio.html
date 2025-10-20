@@ -3611,34 +3611,48 @@ function setEpisodeCount(itemId, season, count) {
         if (loadedSections === totalSections) {
             updateFiltersList();
             renderMovies();
-            // Aplicar filtros iniciais após tudo carregar
             setTimeout(() => applyMovieFilters(), 100);
         }
     };
     
-    database.ref('content/filmes').on('value', (snapshot) => {
+    // Função que será chamada SEMPRE que os dados mudam
+    const onFilmesUpdate = (snapshot) => {
         const data = snapshot.val();
         content.filmes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'filmes'})) : [];
-        checkAllLoaded();
-    });
-
-    database.ref('content/series').on('value', (snapshot) => {
+        updateFiltersList();
+        renderMovies();
+        applyMovieFilters();
+    };
+    
+    const onSeriesUpdate = (snapshot) => {
         const data = snapshot.val();
         content.series = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'series'})) : [];
-        checkAllLoaded();
-    });
-
-    database.ref('content/animes').on('value', (snapshot) => {
+        updateFiltersList();
+        renderMovies();
+        applyMovieFilters();
+    };
+    
+    const onAnimesUpdate = (snapshot) => {
         const data = snapshot.val();
         content.animes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'animes'})) : [];
-        checkAllLoaded();
-    });
-
-    database.ref('content/animacoes').on('value', (snapshot) => {
+        updateFiltersList();
+        renderMovies();
+        applyMovieFilters();
+    };
+    
+    const onAnimacoesUpdate = (snapshot) => {
         const data = snapshot.val();
         content.animacoes = data ? Object.keys(data).map(key => ({...data[key], firebaseKey: key, type: 'animacoes'})) : [];
-        checkAllLoaded();
-    });
+        updateFiltersList();
+        renderMovies();
+        applyMovieFilters();
+    };
+    
+    // Usar 'on' para atualizar em tempo real
+    database.ref('content/filmes').on('value', onFilmesUpdate);
+    database.ref('content/series').on('value', onSeriesUpdate);
+    database.ref('content/animes').on('value', onAnimesUpdate);
+    database.ref('content/animacoes').on('value', onAnimacoesUpdate);
 }
 
 function updateFiltersList() {
@@ -5082,6 +5096,8 @@ function createMovieCard(m, type) {
         setTimeout(() => checkMovieCompletion(itemId), 500);
     }
 }
+
+
 
         function addGenre() {
             const input = document.getElementById('genreInput');

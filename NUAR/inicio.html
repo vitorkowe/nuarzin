@@ -4381,16 +4381,17 @@ window.showSeason = function(season, itemId) {
     const adminUser = auth.currentUser;
     const isAdmin = adminUser && isAdminUser(adminUser.email);
     
-    const moviesGrid = document.getElementById('moviesGrid');
-    const seriesGrid = document.getElementById('seriesGrid');
-    const animesGrid = document.getElementById('animesGrid');
-    const animacoesGrid = document.getElementById('animacoesGrid');
-
+    // Adicionar/remover classe somente quando há mudança real
     if (isAdmin) {
         document.body.classList.add('admin-mode-active');
     } else {
         document.body.classList.remove('admin-mode-active');
     }
+
+    const moviesGrid = document.getElementById('moviesGrid');
+    const seriesGrid = document.getElementById('seriesGrid');
+    const animesGrid = document.getElementById('animesGrid');
+    const animacoesGrid = document.getElementById('animacoesGrid');
 
     // Renderizar séries
     if (seriesGrid) {
@@ -4419,63 +4420,65 @@ window.showSeason = function(season, itemId) {
         if (isAdmin) setupDragAndDrop(animacoesGrid, 'animacoes');
     }
 
-    // Renderizar filmes (COM FILTROS)
-    // A grid de filmes é renderizada pela função applyMovieFilters()
-    // Não renderizar aqui para evitar conflito
-
     renderContinueWatching();
 }
 
-        function setupDragAndDrop(gridElement, gridType) {
-            const cards = gridElement.querySelectorAll('.movie-card');
-            cards.forEach(card => {
-                card.setAttribute('draggable', 'true');
-                
-                card.addEventListener('dragstart', (e) => {
-                    card.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/plain', JSON.stringify({
-                        itemId: card.dataset.itemId || card.onclick.toString().match(/'([^']+)'/)[1],
-                        sourceType: gridType
-                    }));
-                });
-                
-                card.addEventListener('dragend', (e) => {
-                    card.classList.remove('dragging');
-                });
-            });
-            
-            gridElement.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                gridElement.classList.add('drag-over');
-            });
-            
-            gridElement.addEventListener('dragleave', (e) => {
-                if (e.target === gridElement) {
-                    gridElement.classList.remove('drag-over');
-                }
-            });
-            
-            gridElement.addEventListener('drop', (e) => {
-                e.preventDefault();
-                gridElement.classList.remove('drag-over');
-                
-                try {
-                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    const { itemId, sourceType } = data;
-                    
-                    if (sourceType === gridType) {
-                        showToast('O item já está nesta categoria');
-                        return;
-                    }
-                    
-                    moveContentBetweenCategories(itemId, sourceType, gridType);
-                } catch (error) {
-                    console.error('Erro ao processar drop:', error);
-                }
-            });
+function setupDragAndDrop(gridElement, gridType) {
+    const adminUser = auth.currentUser;
+    const isAdmin = adminUser && isAdminUser(adminUser.email);
+    
+    // Só configurar drag and drop se for admin
+    if (!isAdmin) return;
+    
+    const cards = gridElement.querySelectorAll('.movie-card');
+    cards.forEach(card => {
+        card.setAttribute('draggable', 'true');
+        
+        card.addEventListener('dragstart', (e) => {
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                itemId: card.dataset.itemId || card.onclick.toString().match(/'([^']+)'/)[1],
+                sourceType: gridType
+            }));
+        });
+        
+        card.addEventListener('dragend', (e) => {
+            card.classList.remove('dragging');
+        });
+    });
+    
+    gridElement.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        gridElement.classList.add('drag-over');
+    });
+    
+    gridElement.addEventListener('dragleave', (e) => {
+        if (e.target === gridElement) {
+            gridElement.classList.remove('drag-over');
         }
+    });
+    
+    gridElement.addEventListener('drop', (e) => {
+        e.preventDefault();
+        gridElement.classList.remove('drag-over');
+        
+        try {
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const { itemId, sourceType } = data;
+            
+            if (sourceType === gridType) {
+                showToast('O item já está nesta categoria');
+                return;
+            }
+            
+            moveContentBetweenCategories(itemId, sourceType, gridType);
+        } catch (error) {
+            console.error('Erro ao processar drop:', error);
+        }
+    });
+}
 
         function moveContentBetweenCategories(itemId, sourceType, targetType) {
     const item = content[sourceType].find(i => (i.firebaseKey || i.id) === itemId);
@@ -4596,70 +4599,74 @@ window.showSeason = function(season, itemId) {
     `;
 }
 
-        function createMovieCardWithProgress(m, type, progress) {
-            const adminUser = auth.currentUser;
-            const isAdmin = adminUser && isAdminUser(adminUser.email);
-            const genresText = m.genres.join(' • ');
-            const itemId = m.firebaseKey || m.id;
-            
-            return `
-                <div class="movie-card" data-item-id="${itemId}" onclick="openModal('${itemId}')">
-                    <div class="movie-poster">
-                        <img src="${m.imageUrl}" alt="${m.title}">
-                        ${isAdmin ? `
-                        <button class="delete-btn show" 
-                                data-id="${itemId}" 
-                                onclick="deleteContent(event, '${itemId}', '${type}')">
-                            <svg viewBox="0 0 24 24" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                <line x1="10" y1="11" x2="10" y2="17"/>
-                                <line x1="14" y1="11" x2="14" y2="17"/>
-                            </svg>
-                        </button>
-                        <button class="edit-btn show" 
-                                data-id="${itemId}" 
-                                onclick="openEditModal(event, '${itemId}', '${type}')">
-                            <svg viewBox="0 0 24 24" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                        </button>
-                        ` : ''}
-                        <button class="favorite-btn ${userFavorites.has(itemId) ? 'favorited' : ''}" 
-                                data-id="${itemId}" 
-                                onclick="toggleFavorite(event, '${itemId}')">
-                            <svg viewBox="0 0 24 24" stroke-width="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                            </svg>
-                        </button>
-                        <div class="progress-text">${Math.round(progress)}% assistido</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${progress}%"></div>
-                        </div>
-                        <div class="genre-badge" title="${genresText}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 0 1 0 2.828l-7 7a2 2 0 0 1-2.828 0l-7-7A1.994 1.994 0 0 1 3 12V7a4 4 0 0 1 4-4z"/>
-                            </svg>
-                            ${genresText}
-                        </div>
-                        <div class="play-icon"></div>
-                    </div>
-                    <div class="movie-info">
-                        <div class="movie-title">${m.title}</div>
-                        <div class="movie-meta">
-                            <span class="rating">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                </svg>
-                                ${m.rating}
-                            </span>
-                            <span>${m.year}</span>
-                        </div>
-                    </div>
+function createMovieCard(m, type) {
+    const adminUser = auth.currentUser;
+    const isAdmin = adminUser && isAdminUser(adminUser.email);
+    
+    const genresText = m.genres.join(' • ');
+    const itemId = m.firebaseKey || m.id;
+    const isFavorited = userFavorites.has(itemId);
+    const progress = watchingProgress[itemId];
+    const progressPercent = progress ? Math.round(progress.progress) : 0;
+    
+    // Botões de editar/deletar SOMENTE aparecem para admin logado
+    const adminButtons = isAdmin ? `
+        <button class="delete-btn show" 
+                data-id="${itemId}" 
+                onclick="deleteContent(event, '${itemId}', '${type}')">
+            <svg viewBox="0 0 24 24" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+        </button>
+        <button class="edit-btn show" 
+                data-id="${itemId}" 
+                onclick="openEditModal(event, '${itemId}', '${type}')">
+            <svg viewBox="0 0 24 24" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+        </button>
+    ` : '';
+    
+    return `
+        <div class="movie-card" data-item-id="${itemId}" onclick="openModal('${itemId}')">
+            <div class="movie-poster">
+                <img src="${m.imageUrl}" alt="${m.title}">
+                ${adminButtons}
+                <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" 
+                        data-id="${itemId}" 
+                        onclick="toggleFavorite(event, '${itemId}')">
+                    <svg viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
+                <div class="genre-badge" title="${genresText}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 0 1 0 2.828l-7 7a2 2 0 0 1-2.828 0l-7-7A1.994 1.994 0 0 1 3 12V7a4 4 0 0 1 4-4z"/>
+                    </svg>
+                    ${genresText}
                 </div>
-            `;
-        }
+                ${progressPercent > 0 ? `<div class="progress-text">${progressPercent}% assistido</div><div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%"></div></div>` : ''}
+                <div class="play-icon"></div>
+            </div>
+            <div class="movie-info">
+                <div class="movie-title">${m.title}</div>
+                <div class="movie-meta">
+                    <span class="rating">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        ${m.rating}
+                    </span>
+                    <span>${m.year}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
 
         function openEditModal(event, itemId, type) {
             event.stopPropagation();
@@ -4676,13 +4683,15 @@ window.showSeason = function(season, itemId) {
             document.getElementById('editingId').value = itemId;
             document.getElementById('editingType').value = type;
             
-            document.getElementById('contentTitle').value = item.title;
-            document.getElementById('contentYear').value = item.year;
-            document.getElementById('contentRating').value = item.rating;
-            document.getElementById('contentDuration').value = item.duration;
-            document.getElementById('contentDescription').value = item.description;
-            document.getElementById('contentImage').value = item.imageUrl;
-            document.getElementById('contentVideo').value = item.videoUrl;
+            document.getElementById('contentTitle').value = '';
+        document.getElementById('contentYear').value = '';
+        document.getElementById('contentRating').value = '';
+        document.getElementById('contentDuration').value = '';
+        document.getElementById('contentDescription').value = '';
+        document.getElementById('contentImage').value = '';
+        document.getElementById('contentVideo').value = '';
+        adminGenres = [];
+        updateGenresList();
 
             document.getElementById('adminTabsContainer').style.display = 'flex';
             document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -4724,7 +4733,7 @@ window.showSeason = function(season, itemId) {
                         showToast(`${tipoNome} "${item.title}" removido com sucesso`);
                     })
                     .catch((error) => {
-                        console.error('❌ Erro ao remover:', error);
+                        console.error('❌ Erro ao adicionar:', error);
                         alert(`❌ Erro ao remover conteúdo!\n\nDetalhes: ${error.message}\nCódigo: ${error.code || 'Desconhecido'}`);
                     });
             }
@@ -4949,102 +4958,110 @@ window.showSeason = function(season, itemId) {
             });
 
             document.getElementById('adminContentForm').addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                if (adminGenres.length === 0) {
-                    alert('Adicione pelo menos um gênero');
-                    return;
-                }
-
-                const itemData = {
-                    title: document.getElementById('contentTitle').value.trim(),
-                    year: parseInt(document.getElementById('contentYear').value),
-                    rating: parseFloat(document.getElementById('contentRating').value),
-                    duration: document.getElementById('contentDuration').value.trim(),
-                    genres: [...adminGenres],
-                    description: document.getElementById('contentDescription').value.trim(),
-                    imageUrl: document.getElementById('contentImage').value.trim(),
-                    videoUrl: document.getElementById('contentVideo').value.trim()
-                };
-
-                if (isEditMode) {
-    const editId = document.getElementById('editingId').value;
-    const editType = document.getElementById('editingType').value;
-    const oldItem = content[editType].find(i => (i.firebaseKey || i.id) === editId);
-                    
-    if (!oldItem || !oldItem.firebaseKey) {
-        alert('❌ Erro ao encontrar item para editar');
+    e.preventDefault();
+    
+    const adminUser = auth.currentUser;
+    
+    if (!adminUser || !isAdminUser(adminUser.email)) {
+        alert('Você não tem permissão para fazer isso');
         return;
     }
-                    
-                    if (editType !== selectedContentType) {
-                        deleteContentFromFirebase(editType, oldItem.firebaseKey)
-    .then(() => saveContentToFirebase(selectedContentType, itemData))
-    .then(() => {
-        contentModal.classList.remove('active');
-        resetAdminForm();
-        const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
-                        selectedContentType === 'series' ? 'Série' :
-                        selectedContentType === 'animes' ? 'Anime' : 'Animação';
-        showToast(`Conteúdo movido para ${tipoNome}s com sucesso`);
-        
-        // ✅ MANTER ADMIN LOGADO E RENDERIZAR COM CONTROLES
-        setTimeout(() => {
-            renderMovies();
-        }, 300);
-    })
-    .catch((error) => {
-        console.error('❌ Erro ao mover:', error);
-        alert(`Erro: ${error.message}`);
-    });
-                    } else {
-                        updateContentInFirebase(selectedContentType, oldItem.firebaseKey, itemData)
-    .then(() => {
-        contentModal.classList.remove('active');
-        resetAdminForm();
-        const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
-                        selectedContentType === 'series' ? 'Série' : 
-                        selectedContentType === 'animes' ? 'Anime' : 'Animação';
-        showToast(`${tipoNome} "${itemData.title}" atualizado com sucesso`);
-        
-        // ✅ MANTER ADMIN LOGADO E RENDERIZAR COM CONTROLES
-        setTimeout(() => {
-            renderMovies();
-        }, 300);
-    })
-    .catch((error) => {
-        console.error('❌ Erro ao atualizar:', error);
-        alert(`Erro: ${error.message}`);
-    });
-                    }
-                } else {
-                    const timestamp = Date.now();
-                    itemData.id = `${selectedContentType[0]}${timestamp}`;
-                    itemData.createdAt = timestamp;
+    
+    if (adminGenres.length === 0) {
+        alert('Adicione pelo menos um gênero');
+        return;
+    }
 
-                    saveContentToFirebase(selectedContentType, itemData)
-    .then(() => {
-        contentModal.classList.remove('active');
-        resetAdminForm();
-        const tipo = selectedContentType === 'filmes' ? 'Filme' : 
-                     selectedContentType === 'series' ? 'Série' :
-                     selectedContentType === 'animes' ? 'Anime' : 'Animação';
-        showToast(`${tipo} "${itemData.title}" adicionado com sucesso`);
+    const itemData = {
+        title: document.getElementById('contentTitle').value.trim(),
+        year: parseInt(document.getElementById('contentYear').value),
+        rating: parseFloat(document.getElementById('contentRating').value),
+        duration: document.getElementById('contentDuration').value.trim(),
+        genres: [...adminGenres],
+        description: document.getElementById('contentDescription').value.trim(),
+        imageUrl: document.getElementById('contentImage').value.trim(),
+        videoUrl: document.getElementById('contentVideo').value.trim()
+    };
+
+    const submitBtn = document.getElementById('adminSubmitBtn');
+    const originalText = submitBtn.textContent;
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processando...';
+
+    const finishOperation = () => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    };
+
+    if (isEditMode) {
+        const editId = document.getElementById('editingId').value;
+        const editType = document.getElementById('editingType').value;
+        const oldItem = content[editType].find(i => (i.firebaseKey || i.id) === editId);
         
-        // ✅ VERIFICAR CONQUISTA DE PRIMEIRA CONTRIBUIÇÃO
-        checkFirstContentAchievement();
+        if (!oldItem || !oldItem.firebaseKey) {
+            alert('Erro ao encontrar item para editar');
+            finishOperation();
+            return;
+        }
         
-        // ✅ MANTER ADMIN LOGADO E RENDERIZAR COM CONTROLES
-        setTimeout(() => {
-            renderMovies();
-        }, 300);
-    })
-    .catch((error) => {
-        console.error('❌ Erro ao adicionar:', error);
-        alert(`Erro: ${error.message}`);
-    });
-                }
+        if (editType !== selectedContentType) {
+            deleteContentFromFirebase(editType, oldItem.firebaseKey)
+                .then(() => saveContentToFirebase(selectedContentType, itemData))
+                .then(() => {
+                    const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
+                                    selectedContentType === 'series' ? 'Série' :
+                                    selectedContentType === 'animes' ? 'Anime' : 'Animação';
+                    showToast(`Movido para ${tipoNome}s com sucesso`);
+                    resetAdminForm();
+                    renderMovies();
+                    finishOperation();
+                })
+                .catch((error) => {
+                    alert(`Erro: ${error.message}`);
+                    finishOperation();
+                });
+        } else {
+            updateContentInFirebase(selectedContentType, oldItem.firebaseKey, itemData)
+                .then(() => {
+                    const tipoNome = selectedContentType === 'filmes' ? 'Filme' : 
+                                    selectedContentType === 'series' ? 'Série' : 
+                                    selectedContentType === 'animes' ? 'Anime' : 'Animação';
+                    showToast(`${tipoNome} atualizado com sucesso`);
+                    resetAdminForm();
+                    renderMovies();
+                    finishOperation();
+                })
+                .catch((error) => {
+                    alert(`Erro: ${error.message}`);
+                    finishOperation();
+                });
+        }
+    } else {
+        const timestamp = Date.now();
+        itemData.id = `${selectedContentType[0]}${timestamp}`;
+        itemData.createdAt = timestamp;
+
+        saveContentToFirebase(selectedContentType, itemData)
+            .then(() => {
+                const tipo = selectedContentType === 'filmes' ? 'Filme' : 
+                             selectedContentType === 'series' ? 'Série' :
+                             selectedContentType === 'animes' ? 'Anime' : 'Animação';
+                showToast(`${tipo} adicionado com sucesso`);
+                checkFirstContentAchievement();
+                
+                // MANTER ADMIN LOGADO - NÃO FECHAR MODAL
+                resetAdminForm();
+                renderMovies();
+                document.getElementById('contentTitle').focus();
+                finishOperation();
+            })
+            .catch((error) => {
+                alert(`Erro: ${error.message}`);
+                finishOperation();
             });
+    }
+});
         }
 
         function markProgress(percent, itemId) {

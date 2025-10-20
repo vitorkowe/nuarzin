@@ -4682,7 +4682,7 @@ function createMovieCard(m, type) {
     `;
 }
 
-        function openEditModal(event, itemId, type) {
+function openEditModal(event, itemId, type) {
             event.stopPropagation();
             
             const item = content[type].find(i => (i.firebaseKey || i.id) === itemId);
@@ -4697,15 +4697,16 @@ function createMovieCard(m, type) {
             document.getElementById('editingId').value = itemId;
             document.getElementById('editingType').value = type;
             
-            document.getElementById('contentTitle').value = '';
-        document.getElementById('contentYear').value = '';
-        document.getElementById('contentRating').value = '';
-        document.getElementById('contentDuration').value = '';
-        document.getElementById('contentDescription').value = '';
-        document.getElementById('contentImage').value = '';
-        document.getElementById('contentVideo').value = '';
-        adminGenres = [];
-        updateGenresList();
+            // ✅ PREENCHER campos com os dados do item
+            document.getElementById('contentTitle').value = item.title;
+            document.getElementById('contentYear').value = item.year;
+            document.getElementById('contentRating').value = item.rating;
+            document.getElementById('contentDuration').value = item.duration;
+            document.getElementById('contentDescription').value = item.description;
+            document.getElementById('contentImage').value = item.imageUrl;
+            document.getElementById('contentVideo').value = item.videoUrl;
+            
+            updateGenresList();
 
             document.getElementById('adminTabsContainer').style.display = 'flex';
             document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -4713,7 +4714,6 @@ function createMovieCard(m, type) {
             });
 
             toggleDurationField();
-            updateGenresList();
             document.getElementById('adminContentModal').classList.add('active');
         }
 
@@ -5549,9 +5549,6 @@ function applyMovieFilters() {
 }
 
 function renderMoviesWithFilters() {
-    const adminUser = auth.currentUser;
-    const isAdmin = adminUser && isAdminUser(adminUser.email);
-    
     filterElements.moviesGrid.innerHTML = '';
 
     if (filteredMoviesForDisplay.length === 0) {
@@ -5560,6 +5557,9 @@ function renderMoviesWithFilters() {
     }
 
     filterElements.moviesGrid.innerHTML = filteredMoviesForDisplay.map(m => createMovieCard(m, 'filmes')).join('');
+    
+    const adminUser = auth.currentUser;
+    const isAdmin = adminUser && isAdminUser(adminUser.email);
     
     if (isAdmin) {
         setupDragAndDrop(filterElements.moviesGrid, 'filmes');

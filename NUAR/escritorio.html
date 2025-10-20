@@ -506,7 +506,6 @@
                 }
             }
             
-            // Paredes superiores e áreas bloqueadas
             for (let y = 0; y < 8; y++) {
                 for (let x = 0; x < 41; x++) {
                     if ((x >= 2 && x < 7) || (x >= 11 && x < 18) || (x >= 30 && x < 38)) {
@@ -515,28 +514,24 @@
                 }
             }
             
-            // Mesa de reunião central
             for (let y = 14; y < 19; y++) {
                 for (let x = 9; x < 17; x++) {
                     collisionMap[y][x] = 1;
                 }
             }
             
-            // Mesa inferior direita
             for (let y = 13; y < 16; y++) {
                 for (let x = 28; x < 37; x++) {
                     collisionMap[y][x] = 1;
                 }
             }
             
-            // Sofás inferiores
             for (let y = 16; y < 19; y++) {
                 for (let x = 30; x < 35; x++) {
                     collisionMap[y][x] = 1;
                 }
             }
             
-            // Cadeiras da mesa de reunião (posições livres para sentar)
             chairPositions.push({ x: 10 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
             chairPositions.push({ x: 12 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
             chairPositions.push({ x: 14 * TILE_SIZE, y: 13 * TILE_SIZE, direction: 'front' });
@@ -748,7 +743,8 @@
                     updatePlayersList();
                 });
                 
-                messagesRef.limitToLast(50).on('child_added', (snapshot) => {
+                const currentTime = Date.now();
+                messagesRef.orderByChild('timestamp').startAt(currentTime).on('child_added', (snapshot) => {
                     const msgKey = snapshot.key;
                     if (!receivedMessages.has(msgKey)) {
                         receivedMessages.add(msgKey);
@@ -817,8 +813,7 @@
             };
             
             if (messagesRef) {
-                const newMsgRef = messagesRef.push(messageData);
-                receivedMessages.add(newMsgRef.key);
+                messagesRef.push(messageData);
             }
             
             addChatMessage(myName, text, myCharacter, time, true);

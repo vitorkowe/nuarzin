@@ -4850,91 +4850,14 @@ function openEditModal(event, itemId, type) {
         }
 
         function deleteContent(event, itemId, type) {
-    event.stopPropagation();
-    
-    const item = content[type].find(i => (i.firebaseKey || i.id) === itemId);
-    if (!item) {
-        alert(`❌ Item não encontrado!\n\nID: ${itemId}\nTipo: ${type}`);
-        console.error('❌ Item não encontrado para deletar:', { itemId, type });
-        return;
-    }
-
-    showCustomConfirm(item, type, itemId); {
-}
-function showCustomConfirm(item, type, itemId) {
-    const modal = document.getElementById('customConfirmModal');
-    const preview = document.getElementById('confirmItemPreview');
-    
-    const typeLabel = type === 'filmes' ? 'Filme' : 
-                      type === 'series' ? 'Série' :
-                      type === 'animes' ? 'Anime' : 'Animação';
-    
-    preview.innerHTML = `
-        <img src="${item.imageUrl}" alt="${item.title}" class="custom-confirm-item-poster" onerror="this.src='https://via.placeholder.com/50x70?text=No+Image'">
-        <div class="custom-confirm-item-info">
-            <div class="custom-confirm-item-title">${item.title}</div>
-            <div class="custom-confirm-item-meta">${typeLabel} • ${item.year} • ⭐ ${item.rating}</div>
-        </div>
-    `;
-    
-    modal.classList.add('active');
-    
-    // Botão cancelar
-    const cancelBtn = document.getElementById('customConfirmCancel');
-    const deleteBtn = document.getElementById('customConfirmDelete');
-    
-    const closeModal = () => {
-        modal.classList.remove('active');
-        cancelBtn.replaceWith(cancelBtn.cloneNode(true));
-        deleteBtn.replaceWith(deleteBtn.cloneNode(true));
-    };
-    
-    cancelBtn.onclick = closeModal;
-    
-    // Botão deletar
-    deleteBtn.onclick = () => {
-        const firebaseKey = item.firebaseKey;
-        
-        if (!firebaseKey) {
-            alert(`❌ Erro: Item sem chave do Firebase!\n\nTítulo: ${item.title}\n\nEste item não pode ser deletado.`);
-            console.error('❌ Item sem firebaseKey:', item);
-            closeModal();
-            return;
-        }
-        
-        console.log(`🗑️ Deletando item: "${item.title}" (${type})...`);
-        
-        deleteContentFromFirebase(type, firebaseKey)
-            .then(() => {
-                console.log('✅ Item deletado com sucesso');
-                showToast(`${typeLabel} "${item.title}" removido com sucesso`);
-                closeModal();
-            })
-            .catch((error) => {
-                console.error('❌ Erro ao deletar:', error);
-                alert(`❌ Erro ao remover conteúdo!\n\nDetalhes: ${error.message}\nCódigo: ${error.code || 'Desconhecido'}`);
-                closeModal();
-            });
-    };
-    
-    // Fechar com ESC
-    const escHandler = (e) => {
-        if (e.key === 'Escape') {
-            closeModal();
-            document.removeEventListener('keydown', escHandler);
-        }
-    };
-    document.addEventListener('keydown', escHandler);
-    
-    // Fechar clicando fora
-    modal.onclick = (e) => {
-        if (e.target === modal) {
-            closeModal();
-        }
-    };
-}
-
-    
+            event.stopPropagation();
+            
+            const item = content[type].find(i => (i.firebaseKey || i.id) === itemId);
+            if (!item) {
+                alert(`❌ Item não encontrado!\n\nID: ${itemId}\nTipo: ${type}`);
+                console.error('❌ Item não encontrado para deletar:', { itemId, type });
+                return;
+            }
 
             if (confirm(`🗑️ Deseja realmente remover?\n\n"${item.title}"\n\nEsta ação não pode ser desfeita!`)) {
                 const firebaseKey = item.firebaseKey;
